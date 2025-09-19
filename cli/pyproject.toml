@@ -1,0 +1,59 @@
+[project]
+name = "edf-plasma-cli"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["edf", "plasma", "forensic", "artifact", "dissector", "normalizer", "cli"]
+description = "EDF Plasma CLI"
+requires-python = ">=3.12"
+dynamic = ["version"]
+authors = [
+  { name="CERT-EDF", email="cert@edf.fr" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Utilities",
+    "Topic :: Security",
+]
+dependencies = [
+    "edf-plasma-dissectors~=1.0",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/cert-edf/plasma"
+"Repository" = "https://github.com/cert-edf/plasma"
+"Bug Tracker" = "https://github.com/cert-edf/plasma/issues"
+
+
+[project.scripts]
+"plasma" = "edf_plasma_cli.main:app"
+
+
+[build-system]
+requires = ["setuptools>=78", "setuptools_scm>=8.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["edf_plasma_cli", "edf_plasma_cli.*"]
+
+
+[tool.setuptools_scm]
+root = ".."
+version_file = "edf_plasma_cli/__version__.py"
+
+
+[tool.black]
+line-length = 79
+skip-string-normalization = true
+
+
+[tool.isort]
+profile = "black"
+line_length = 79

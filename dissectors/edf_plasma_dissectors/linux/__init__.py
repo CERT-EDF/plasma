@@ -1,0 +1,27 @@
+"""Linux dissectors"""
+
+from . import (
+    apt,
+    at,
+    auditd,
+    authlog,
+    crontab,
+    dpkg,
+    fslist,
+    fstab,
+    group,
+    history,
+    hosts,
+    journal,
+    logrotate,
+    netstat,
+    passwd,
+    resolv,
+    shadow,
+    systemd,
+    udev_rules,
+    usbguard,
+    wtmp_utmp,
+    xdg_autostart,
+    yum,
+)

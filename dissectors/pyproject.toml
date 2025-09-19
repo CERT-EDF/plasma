@@ -1,0 +1,66 @@
+[project]
+name = "edf-plasma-dissectors"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["edf", "plasma", "forensic", "artifact", "dissector", "normalizer", "framework"]
+description = "EDF Plasma Dissectors"
+requires-python = ">=3.12"
+dynamic = ["version"]
+authors = [
+  { name="CERT-EDF", email="cert@edf.fr" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Utilities",
+    "Topic :: Security",
+]
+dependencies = [
+    "edf-plasma-core~=1.0",
+    "scapy~=2.5",
+    "lief~=0.14",
+    "systemd-python",
+    "construct~=2.10",
+    "liblnk-python",
+    "libevtx-python",
+    "libscca-python",
+    "libregf-python",
+    "libesedb-python",
+    "libolecf-python",
+    "libfsntfs-python",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/cert-edf/plasma"
+"Repository" = "https://github.com/cert-edf/plasma"
+"Bug Tracker" = "https://github.com/cert-edf/plasma/issues"
+
+
+[build-system]
+requires = ["setuptools>=78", "setuptools_scm>=8.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["edf_plasma_dissectors", "edf_plasma_dissectors.*"]
+
+
+[tool.setuptools_scm]
+root = ".."
+version_file = "edf_plasma_dissectors/__version__.py"
+
+
+[tool.black]
+line-length = 79
+skip-string-normalization = true
+
+
+[tool.isort]
+profile = "black"
+line_length = 79

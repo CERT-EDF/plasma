@@ -1,0 +1,58 @@
+[project]
+name = "edf-plasma-core"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["edf", "plasma", "forensic", "artifact", "dissector", "normalizer", "core"]
+description = "EDF Plasma Core"
+requires-python = ">=3.12"
+dynamic = ["version"]
+authors = [
+  { name="CERT-EDF", email="cert@edf.fr" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Utilities",
+    "Topic :: Security",
+]
+dependencies = [
+    "yarl~=1.9",
+    "rich~=14.1",
+    "magika~=0.5",
+    "python-magic~=0.4",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/cert-edf/plasma"
+"Repository" = "https://github.com/cert-edf/plasma"
+"Bug Tracker" = "https://github.com/cert-edf/plasma/issues"
+
+
+[build-system]
+requires = ["setuptools>=78", "setuptools_scm>=8.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["edf_plasma_core", "edf_plasma_core.*"]
+
+
+[tool.setuptools_scm]
+root = ".."
+version_file = "edf_plasma_core/__version__.py"
+
+
+[tool.black]
+line-length = 79
+skip-string-normalization = true
+
+
+[tool.isort]
+profile = "black"
+line_length = 79
