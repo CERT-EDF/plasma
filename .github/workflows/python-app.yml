@@ -23,6 +23,7 @@ jobs:
         python-version: "3.12"
     - name: Setup Plasma
       run: |
+        sudo apt update
         sudo apt install libsystemd-dev
         python3 -m pip install --upgrade pip
         python3 -m pip install core/ dissectors/ cli/
