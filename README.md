@@ -21,7 +21,7 @@ It can be easily extended by adding new dissectors. Most dissectors are based on
 - [Scapy](https://github.com/secdev/scapy) for packet captures processing
 - [libyal](https://github.com/libyal) for Windows artifacts processing
 - [construct](https://github.com/construct/construct) for raw structures processing
-- [volatility3](https://github.com/volatilityfoundation/volatility3) for memory dump processing (SOON)
+- [volatility3](https://github.com/volatilityfoundation/volatility3) for memory dump processing
 - [MVT](https://github.com/mvt-project/mvt) extracted files for normalization
 
 Many thanks to these projects for their contribution to the cybersecurity open source community!
