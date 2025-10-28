@@ -12,9 +12,9 @@ from edf_plasma_core.helper.typing import PathIterator
 from volatility3 import plugins, symbols
 from volatility3.framework import (
     automagic,
+    clear_cache,
     constants,
     contexts,
-    clear_cache,
     exceptions,
     import_files,
     interfaces,
@@ -29,7 +29,6 @@ from volatility3.framework.renderers import (
     format_hints,
 )
 
-
 _LOGGER = get_logger('dissectors.memory.helper')
 _SETUP_LOCK = Lock()
 _SETUP_FLAG = Event()
@@ -38,7 +37,7 @@ _SETUP_FLAG = Event()
 _MEMDUMP_MAGICS = (
     b'LMVA',
     b'EGAP',
-    b'\x7FELF',
+    b'\x7fELF',
     b'LiME',
     b'QEVM',
     b'\xd0\xbe\xd2\xbe',

@@ -3,17 +3,17 @@
 from pathlib import Path
 from platform import node
 
-from edf_plasma_core.helper.csv import write_csv_gz
-from edf_plasma_core.helper.filtering import Filter
-from edf_plasma_core.helper.json import write_jsonl_gz
-from edf_plasma_core.helper.logging import get_logger
-from edf_plasma_core.helper.matching import regexp
 from edf_plasma_core.dissector import (
     DissectionContext,
     Dissector,
     DissectorList,
     get_dissectors,
 )
+from edf_plasma_core.helper.csv import write_csv_gz
+from edf_plasma_core.helper.filtering import Filter
+from edf_plasma_core.helper.json import write_jsonl_gz
+from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.matching import regexp
 
 from .abc import FileFormat, display_table
 
