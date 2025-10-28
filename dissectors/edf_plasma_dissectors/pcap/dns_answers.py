@@ -8,14 +8,11 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import RecordIterator
-from scapy.layers.dns import DNS, dnstypes
 
-from .helper import (
-    decode_utf8_string,
-    pkt_base_record,
-    select_pcap_impl,
-    stream_pcap_packets,
-)
+from .helper import select_pcap_impl, stream_pcap_packets
+from .helper.decode import decode_utf8_string
+from .helper.dns import dns_layer, dns_type, has_dns
+from .helper.packet import pkt_base_record
 
 
 def _dissect_https(answer) -> RecordIterator:
@@ -25,7 +22,7 @@ def _dissect_https(answer) -> RecordIterator:
         for value in svc_param.value:
             yield {
                 'dns_r_name': decode_utf8_string(answer.rrname),
-                'dns_r_type': dnstypes[answer.type],
+                'dns_r_type': dns_type(answer.type),
                 'dns_r_data': value,
             }
 
@@ -33,7 +30,7 @@ def _dissect_https(answer) -> RecordIterator:
 def _dissect_default(answer) -> RecordIterator:
     yield {
         'dns_r_name': decode_utf8_string(answer.rrname),
-        'dns_r_type': dnstypes[answer.type],
+        'dns_r_type': dns_type(answer.type),
         'dns_r_data': decode_utf8_string(answer.rdata),
     }
 
@@ -45,16 +42,16 @@ _DISSECT_STRATEGY = {
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     for pkt in stream_pcap_packets(ctx.filepath):
-        if DNS not in pkt:
+        if not has_dns(pkt):
             continue
-        if not pkt[DNS].qr or not pkt[DNS].ancount:
+        layer = dns_layer(pkt)
+        if not layer.qr or not layer.ancount:
             continue
         record = pkt_base_record(pkt)
         if not record:
             continue
-        answers = pkt[DNS].an
-        for answer in answers:
-            dns_r_type = dnstypes[answer.type]
+        for answer in layer.an:
+            dns_r_type = dns_type(answer.type)
             _dissect = _DISSECT_STRATEGY.get(dns_r_type, _dissect_default)
             for extra in _dissect(answer):
                 record.update(extra)

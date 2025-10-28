@@ -23,7 +23,7 @@ apt install autoconf \
 # create a virtual environment
 python3 -m venv venv
 # install edf-plasma-cli (will also install edf-plasma-core and edf-plasma-dissectors)
-venv/bin/python -m pip install edf-plasma-dissectors
+venv/bin/python -m pip install edf-plasma-dissectors[pcap,linux,binary,memdump,windows]
 # then you can use it to create your own dissectors
 ```
 

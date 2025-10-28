@@ -14,13 +14,13 @@ from edf_plasma_core.helper.logging import get_logger
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-from .srudb.helper import (
+from .helper.esedb import (
     check_file_signature,
     iter_ese_table_records_as_dicts,
     open_file_object,
 )
 
-_LOGGER = get_logger('dissectors.microsoft.webcache')
+_LOGGER = get_logger('dissectors.windows.webcache')
 _PATTERN = ci_glob_pattern('WebCacheV01.dat')
 _SUPPORTED_NAMES = {'History', 'Cookies', 'iedownload'}
 

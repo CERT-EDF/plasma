@@ -1,13 +1,12 @@
 """Plasma main program"""
 
 from argparse import ArgumentParser
-from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 from sys import exit as sys_exit
-from sys import modules
 
 # load dissectors
 import edf_plasma_dissectors as _
+from edf_plasma_core.helper.importing import import_from_file
 from edf_plasma_core.helper.logging import get_logger
 
 from .__version__ import version
@@ -40,13 +39,6 @@ def _parse_args():
     return args
 
 
-def _import_from_file(plugin: Path):
-    spec = spec_from_file_location(plugin.stem, plugin)
-    module = module_from_spec(spec)
-    modules[plugin.stem] = module
-    spec.loader.exec_module(module)
-
-
 def _import_from_directory(plugin_directory: Path):
     if not plugin_directory:
         return
@@ -55,7 +47,7 @@ def _import_from_directory(plugin_directory: Path):
     for plugin in plugin_directory.glob('*.py'):
         if not plugin.is_file():
             continue
-        _import_from_file(plugin)
+        import_from_file(plugin)
 
 
 def app():

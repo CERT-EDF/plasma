@@ -9,28 +9,24 @@ from edf_plasma_core.dissector import (
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import RecordIterator
 
-from .helper import (
-    IP,
-    TCP,
-    IPv6,
-    Peer,
-    PeerPair,
-    TCPConversations,
-    select_pcap_impl,
-    stream_pcap_packets,
-)
+from .helper import select_pcap_impl, stream_pcap_packets
+from .helper.conv import Peer, PeerPair
+from .helper.ipv4 import has_ipv4, ipv4_layer
+from .helper.ipv6 import ipv6_layer
+from .helper.tcp import has_tcp, tcp_layer
+from .helper.tcp_conv import TCPConversations
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     tcp_convs = TCPConversations()
     for pkt in stream_pcap_packets(ctx.filepath):
-        if TCP not in pkt:
+        if not has_tcp(pkt):
             continue
-        src_addr = pkt[IP].src if IP in pkt else pkt[IPv6].src
-        dst_addr = pkt[IP].dst if IP in pkt else pkt[IPv6].dst
+        tp_layer = tcp_layer(pkt)
+        ip_layer = ipv4_layer(pkt) if has_ipv4(pkt) else ipv6_layer(pkt)
         peer_pair = PeerPair(
-            src_peer=Peer(addr=src_addr, port=pkt[TCP].sport),
-            dst_peer=Peer(addr=dst_addr, port=pkt[TCP].dport),
+            src_peer=Peer(addr=ip_layer.src, port=tp_layer.sport),
+            dst_peer=Peer(addr=ip_layer.dst, port=tp_layer.dport),
         )
         tcp_convs.append(peer_pair, pkt)
         # yield as processing progresses to prevent memory overflow

@@ -8,32 +8,33 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import RecordIterator
-from scapy.layers.tls.all import TLSClientHello
 
-from .helper import (
+from .helper import select_pcap_impl, stream_pcap_packets
+from .helper.packet import pkt_base_record
+from .helper.tls import (
     compute_ja3,
     get_servernames,
-    pkt_base_record,
-    select_pcap_impl,
-    stream_pcap_packets,
+    has_tls_clt_hello,
+    tls_clt_hello_layer,
 )
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     for pkt in stream_pcap_packets(ctx.filepath):
-        if TLSClientHello in pkt:
-            tls_client_hello = pkt[TLSClientHello]
-            record = pkt_base_record(pkt)
-            servernames = get_servernames(tls_client_hello)
-            ja3_string, ja3_hash = compute_ja3(tls_client_hello)
-            record.update(
-                {
-                    'tls_ch_servernames': servernames,
-                    'tls_ch_ja3_hash': ja3_hash,
-                    'tls_ch_ja3_string': ja3_string,
-                }
-            )
-            yield record
+        if not has_tls_clt_hello(pkt):
+            continue
+        layer = tls_clt_hello_layer(pkt)
+        record = pkt_base_record(pkt)
+        servernames = get_servernames(layer)
+        ja3_string, ja3_hash = compute_ja3(layer)
+        record.update(
+            {
+                'tls_ch_servernames': servernames,
+                'tls_ch_ja3_hash': ja3_hash,
+                'tls_ch_ja3_string': ja3_string,
+            }
+        )
+        yield record
 
 
 DISSECTOR = Dissector(

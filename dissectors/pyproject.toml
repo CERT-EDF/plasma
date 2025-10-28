@@ -21,11 +21,19 @@ classifiers = [
 ]
 dependencies = [
     "edf-plasma-core~=1.0",
-    "scapy~=2.5",
-    "lief~=0.14",
-    "volatility3~=2.26",
-    "systemd-python",
     "construct~=2.10",
+]
+
+
+[project.optional-dependencies]
+pcap = [
+    "scapy~=2.6",
+    "cryptography~=46.0",
+]
+linux = ["systemd-python"]
+binary = ["lief~=0.17"]
+memdump = ["volatility3~=2.26"]
+windows = [
     "liblnk-python",
     "libevtx-python",
     "libscca-python",

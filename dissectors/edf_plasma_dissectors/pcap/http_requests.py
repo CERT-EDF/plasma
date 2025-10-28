@@ -8,34 +8,31 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import RecordIterator
-from scapy.layers.http import HTTPRequest
 
-from .helper import (
-    decode_utf8_string,
-    pkt_base_record,
-    select_pcap_impl,
-    stream_pcap_packets,
-)
+from .helper import select_pcap_impl, stream_pcap_packets
+from .helper.decode import decode_utf8_string
+from .helper.http import has_http_req, http_req_layer
+from .helper.packet import pkt_base_record
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     for pkt in stream_pcap_packets(ctx.filepath):
-        if HTTPRequest not in pkt:
+        if not has_http_req(pkt):
             continue
-        http_req = pkt[HTTPRequest]
+        layer = http_req_layer(pkt)
         record = pkt_base_record(pkt)
         if not record:
             continue
-        content_length = decode_utf8_string(http_req.Content_Length)
+        content_length = decode_utf8_string(layer.Content_Length)
         if content_length:
             content_length = int(content_length)
         record.update(
             {
-                'http_method': decode_utf8_string(http_req.Method),
-                'http_path': decode_utf8_string(http_req.Path),
-                'http_host': decode_utf8_string(http_req.Host),
-                'http_user_agent': decode_utf8_string(http_req.User_Agent),
-                'http_content_type': decode_utf8_string(http_req.Content_Type),
+                'http_method': decode_utf8_string(layer.Method),
+                'http_path': decode_utf8_string(layer.Path),
+                'http_host': decode_utf8_string(layer.Host),
+                'http_user_agent': decode_utf8_string(layer.User_Agent),
+                'http_content_type': decode_utf8_string(layer.Content_Type),
                 'http_content_length': content_length,
             }
         )
@@ -58,7 +55,7 @@ DISSECTOR = Dissector(
         Column('http_content_type', DataType.STR),
         Column('http_content_length', DataType.INT),
     ],
-    description="DNS http requests from PCAP",
+    description="HTTP requests from PCAP",
     select_impl=select_pcap_impl,
     dissect_impl=_dissect_impl,
 )

@@ -7,31 +7,20 @@ from os import getenv
 from pathlib import Path
 from threading import Event, Lock
 
+from edf_plasma_core.helper.importing import lazy_import
 from edf_plasma_core.helper.logging import get_logger
 from edf_plasma_core.helper.typing import PathIterator
-from volatility3 import plugins, symbols
-from volatility3.framework import (
-    automagic,
-    clear_cache,
-    constants,
-    contexts,
-    exceptions,
-    import_files,
-    interfaces,
-    list_plugins,
-    require_interface_version,
-)
-from volatility3.framework.configuration import requirements
-from volatility3.framework.plugins import construct_plugin
-from volatility3.framework.renderers import (
-    NotApplicableValue,
-    UnparsableValue,
-    format_hints,
-)
+
+lazy_plugins = lazy_import('volatility3.plugins')
+lazy_symbols = lazy_import('volatility3.symbols')
+lazy_stacker = lazy_import('volatility3.framework.automagic.stacker')
+lazy_framework = lazy_import('volatility3.framework')
+VOLATILITY3_AVAILABLE = lazy_framework is not None
 
 _LOGGER = get_logger('dissectors.memory.helper')
 _SETUP_LOCK = Lock()
 _SETUP_FLAG = Event()
+_BASE_CONFIG_PATH = 'plugins'
 
 
 _MEMDUMP_MAGICS = (
@@ -84,43 +73,53 @@ def _hex_bytes_as_text(value: bytes, width: int = 16) -> str:
     return output
 
 
-def _multitypedata_as_text(value: format_hints.MultiTypeData) -> str:
+def _multitypedata_as_text(
+    value: 'volatility3.framework.renderers.format_hints.MultiTypeData',
+) -> str:
     """Display bytes characters where possible, otherwise display hex data"""
     if value.show_hex:
         return _hex_bytes_as_text(value)
-    string_representation = str(
-        value, encoding=value.encoding, errors='replace'
-    )
+    string_repr = str(value, encoding=value.encoding, errors='replace')
     if value.split_nulls and (
-        (len(value) / 2 - 1) <= len(string_representation) <= (len(value) / 2)
+        (len(value) / 2 - 1) <= len(string_repr) <= (len(value) / 2)
     ):
-        return "\n".join(string_representation.split('\x00'))
+        return "\n".join(string_repr.split('\x00'))
     if (
-        len(string_representation) - 1
-        <= len(string_representation.split('\x00')[0])
-        <= len(string_representation)
+        len(string_repr) - 1
+        <= len(string_repr.split('\x00')[0])
+        <= len(string_repr)
     ):
-        return string_representation.split('\x00')[0]
+        return string_repr.split('\x00')[0]
     return _hex_bytes_as_text(value)
 
 
 def _invalid(val):
-    return isinstance(val, (UnparsableValue, NotApplicableValue))
+    renderers = lazy_framework.renderers
+    return isinstance(
+        val, (renderers.UnparsableValue, renderers.NotApplicableValue)
+    )
 
 
-_RENDERER_STRATEGY = {
-    format_hints.Bin: lambda val: None if _invalid(val) else f'0b{val:b}',
-    format_hints.Hex: lambda val: None if _invalid(val) else f'0x{val:x}',
-    format_hints.HexBytes: _hex_bytes_as_text,
-    format_hints.MultiTypeData: _multitypedata_as_text,
-    datetime: lambda val: None if _invalid(val) else val.isoformat(),
-}
-
-
-def _visitor(node: interfaces.renderers.TreeNode, accumulator, columns):
+def _visitor(
+    node: 'volatility3.framework.interfaces.renderers.TreeNode',
+    accumulator,
+    columns,
+):
+    renderers = lazy_framework.renderers
+    renderer_strategy = {
+        renderers.format_hints.Bin: lambda val: (
+            None if _invalid(val) else f'0b{val:b}'
+        ),
+        renderers.format_hints.Hex: lambda val: (
+            None if _invalid(val) else f'0x{val:x}'
+        ),
+        renderers.format_hints.HexBytes: _hex_bytes_as_text,
+        renderers.format_hints.MultiTypeData: _multitypedata_as_text,
+        datetime: lambda val: None if _invalid(val) else val.isoformat(),
+    }
     row = {'TreeDepth': str(max(0, node.path_depth - 1))}
     for column_index, column in enumerate(columns):
-        renderer = _RENDERER_STRATEGY.get(column.type, lambda val: f'{val}')
+        renderer = renderer_strategy.get(column.type, lambda val: f'{val}')
         row[f'{column.name}'] = renderer(node.values[column_index])
     accumulator.append(row)
     return accumulator
@@ -128,6 +127,7 @@ def _visitor(node: interfaces.renderers.TreeNode, accumulator, columns):
 
 def _log_unsatisfied_exception(exc):
     """Provide useful feedback if an exception occurs during requirement fulfillment."""
+    requirements = lazy_framework.configuration.requirements
     translation_failed = False
     symbols_failed = False
     for config_path in exc.unsatisfied:
@@ -144,7 +144,6 @@ def _log_unsatisfied_exception(exc):
             config_path,
             exc.unsatisfied[config_path].description,
         )
-
     if translation_failed:
         _LOGGER.error(
             "\nA translation layer requirement was not fulfilled.  Please verify that:\n"
@@ -164,12 +163,12 @@ def _log_unsatisfied_exception(exc):
 
 def _log_exception(exc):
     """Provide useful feedback if an exception occurs during a run of a plugin."""
+    constants = lazy_framework.constants
+    exceptions = lazy_framework.exceptions
     _LOGGER.exception(
         "exception raised while plugin was processing the memory image!"
     )
-
     file_a_bug_msg = f"Please re-run with -vvv and file a bug with the output at {constants.BUG_URL}"
-
     if isinstance(exc, exceptions.InvalidAddressException):
         general = "Volatility was unable to read a requested page:"
         if isinstance(exc, exceptions.SwappedInvalidAddressException):
@@ -249,20 +248,21 @@ def _log_exception(exc):
 
 def setup_volatility3_framework():
     """Memory analysis module setup"""
+    constants = lazy_framework.constants
     with _SETUP_LOCK:
         # skip subsequent calls to setup
         if _SETUP_FLAG.is_set():
             return
         _SETUP_FLAG.set()
         # check version
-        require_interface_version(2, 0, 0)
+        lazy_framework.require_interface_version(2, 0, 0)
         # configure plugin directories
         plugin_dirs = [
             Path(item).absolute()
             for item in getenv('PLASMA_VOL_PLUGIN_DIRS', '').split(';')
             if item and Path(item).absolute().is_dir()
         ]
-        plugins.__path__ = [
+        lazy_plugins.__path__ = [
             str(directory) for directory in plugin_dirs
         ] + constants.PLUGINS_PATH
         # configure symbol directories
@@ -271,7 +271,7 @@ def setup_volatility3_framework():
             for item in getenv('PLASMA_VOL_SYMBOL_DIRS', '').split(';')
             if item and Path(item).absolute().is_dir()
         ]
-        symbols.__path__ = [
+        lazy_symbols.__path__ = [
             str(directory.absolute()) for directory in symbol_dirs
         ] + constants.SYMBOL_BASEPATHS
         # configure offline mode
@@ -285,54 +285,57 @@ def setup_volatility3_framework():
             'PLASMA_VOL_CACHE_PATH', constants.CACHE_PATH
         )
         if getenv('PLASMA_VOL_CACHE_CLEAR') is not None:
-            clear_cache()
+            lazy_framework.clear_cache()
         # configure parallelism
         constants.PARALLELISM = constants.Parallelism.Off
         # import plugins
-        failures = import_files(plugins, True)
+        failures = lazy_framework.import_files(lazy_plugins, True)
         if failures:
             _LOGGER.warning(
                 "volatility3 plugins import failures: %s", failures
             )
 
 
-def run_volatility3_plugin(
-    memdump: Path, plugin_name: str, plugin_config: dict | None = None
-) -> Iterator[dict]:
-    plugin_config = plugin_config or {}
-    plugin_list = list_plugins()
+def _create_context(memdump: Path, plugin_name: str, plugin_config: dict):
+    contexts = lazy_framework.contexts
+    automagic = lazy_framework.automagic
+    interfaces = lazy_framework.interfaces
+    requirements = lazy_framework.configuration.requirements
+    choose_os_stackers = lazy_stacker.choose_os_stackers
+    plugin_list = lazy_framework.list_plugins()
     plugin = plugin_list[plugin_name]
-    chosen_configurables_list = {}
-    chosen_configurables_list[plugin] = plugin
-    base_config_path = 'plugins'
     ctx = contexts.Context()
     automagics = automagic.available(ctx)
     plugin_config_path = interfaces.configuration.path_join(
-        base_config_path, plugin.__name__
+        _BASE_CONFIG_PATH, plugin.__name__
     )
     for key, val in plugin_config.items():
         ctx.config[f'{plugin_config_path}.{key}'] = val
     try:
         location = requirements.URIRequirement.location_from_file(str(memdump))
         ctx.config['automagic.LayerStacker.single_location'] = location
-    except ValueError as exc:
+    except ValueError:
         _LOGGER.exception("failed to load single location")
     automagics = automagic.choose_automagic(automagics, plugin)
-    for amagic in automagics:
-        chosen_configurables_list[amagic.__class__.__name__] = amagic
     if ctx.config.get('automagic.LayerStacker.stackers', None) is None:
-        ctx.config['automagic.LayerStacker.stackers'] = (
-            automagic.stacker.choose_os_stackers(plugin)
+        ctx.config['automagic.LayerStacker.stackers'] = choose_os_stackers(
+            plugin
         )
+    return ctx, automagics, plugin
+
+
+def run_volatility3_plugin(
+    memdump: Path, plugin_name: str, plugin_config: dict | None = None
+) -> Iterator[dict]:
+    """Configure, construct and run volatility3 plugin on given memdump"""
+    exceptions = lazy_framework.exceptions
+    ctx, automagics, plugin = _create_context(
+        memdump, plugin_name, plugin_config or {}
+    )
     constructed = None
     try:
-        constructed = construct_plugin(
-            ctx,
-            automagics,
-            plugin,
-            base_config_path,
-            None,
-            None,
+        constructed = lazy_framework.plugins.construct_plugin(
+            ctx, automagics, plugin, _BASE_CONFIG_PATH, None, None
         )
     except exceptions.UnsatisfiedException as exc:
         _log_unsatisfied_exception(exc)

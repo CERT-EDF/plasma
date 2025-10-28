@@ -8,19 +8,14 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import RecordIterator
-from scapy.layers.dns import DNS
-from scapy.layers.http import HTTP
-from scapy.layers.inet import ICMP
 
-from .helper import (
-    TCP,
-    UDP,
-    UnidirectionalCounter,
-    select_pcap_impl,
-    stream_pcap_packets,
-    tcp_data_len,
-    udp_data_len,
-)
+from .helper import select_pcap_impl, stream_pcap_packets
+from .helper.conv import UnidirectionalCounter
+from .helper.dns import dns_layer, has_dns
+from .helper.http import has_http, http_layer
+from .helper.icmp import has_icmp, icmp_layer
+from .helper.tcp import has_tcp, tcp_data_len
+from .helper.udp import has_udp, udp_data_len
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
@@ -34,21 +29,21 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     for pkt in stream_pcap_packets(ctx.filepath):
         counter = None
         data_bytes_cnt = 0
-        if TCP in pkt:
+        if has_tcp(pkt):
             counter = 'tcp'
             data_bytes_cnt = tcp_data_len(pkt)
-        if UDP in pkt:
+        if has_udp(pkt):
             counter = 'udp'
             data_bytes_cnt = udp_data_len(pkt)
-        if UDP in pkt and DNS in pkt:
+        if has_dns(pkt):
             counter = 'dns'
-            data_bytes_cnt = len(pkt[DNS])
-        if HTTP in pkt:
+            data_bytes_cnt = len(dns_layer(pkt))
+        if has_http(pkt):
             counter = 'http'
-            data_bytes_cnt = len(pkt[HTTP])
-        if ICMP in pkt:
+            data_bytes_cnt = len(http_layer(pkt))
+        if has_icmp(pkt):
             counter = 'icmp'
-            data_bytes_cnt = len(pkt[ICMP])
+            data_bytes_cnt = len(icmp_layer(pkt))
         if counter:
             counters[counter].add(data_bytes_cnt)
     for protocol, counter in counters.items():
