@@ -8,29 +8,26 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import RecordIterator
-from scapy.layers.tls.all import TLSServerHello
 
-from .helper import (
-    compute_ja3s,
-    pkt_base_record,
-    select_pcap_impl,
-    stream_pcap_packets,
-)
+from .helper import select_pcap_impl, stream_pcap_packets
+from .helper.packet import pkt_base_record
+from .helper.tls import has_tls_srv_hello, tls_srv_hello_layer, compute_ja3s
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     for pkt in stream_pcap_packets(ctx.filepath):
-        if TLSServerHello in pkt:
-            tls_server_hello = pkt[TLSServerHello]
-            record = pkt_base_record(pkt)
-            ja3s_string, ja3s_hash = compute_ja3s(tls_server_hello)
-            record.update(
-                {
-                    'tls_sh_ja3s_string': ja3s_string,
-                    'tls_sh_ja3s_hash': ja3s_hash,
-                }
-            )
-            yield record
+        if not has_tls_srv_hello(pkt):
+            continue
+        layer = tls_srv_hello_layer(pkt)
+        record = pkt_base_record(pkt)
+        ja3s_string, ja3s_hash = compute_ja3s(layer)
+        record.update(
+            {
+                'tls_sh_ja3s_string': ja3s_string,
+                'tls_sh_ja3s_hash': ja3s_hash,
+            }
+        )
+        yield record
 
 
 DISSECTOR = Dissector(

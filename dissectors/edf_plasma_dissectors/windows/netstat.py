@@ -9,7 +9,6 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.json import read_jsonl
-from edf_plasma_core.helper.logging import get_logger
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 

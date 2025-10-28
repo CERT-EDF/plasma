@@ -8,26 +8,28 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import RecordIterator
-from scapy.layers.tls.all import TLSCertificate
 
-from .helper import pkt_base_record, select_pcap_impl, stream_pcap_packets
+from .helper import select_pcap_impl, stream_pcap_packets
+from .helper.packet import pkt_base_record
+from .helper.tls import has_tls_cert, tls_cert_layer
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     for pkt in stream_pcap_packets(ctx.filepath):
-        if TLSCertificate in pkt:
-            record = pkt_base_record(pkt)
-            tls_certificate = pkt[TLSCertificate]
-            for _, certificate in tls_certificate.certs:
-                record.update(
-                    {
-                        'crt_issuer': certificate.issuer_str,
-                        'crt_subject': certificate.subject_str,
-                        'crt_not_before': certificate.notBefore_str,
-                        'crt_not_after': certificate.notAfter_str,
-                    }
-                )
-                yield record
+        if not has_tls_cert(pkt):
+            continue
+        record = pkt_base_record(pkt)
+        layer = tls_cert_layer(pkt)
+        for _, certificate in layer.certs:
+            record.update(
+                {
+                    'crt_issuer': certificate.issuer_str,
+                    'crt_subject': certificate.subject_str,
+                    'crt_not_before': certificate.notBefore_str,
+                    'crt_not_after': certificate.notAfter_str,
+                }
+            )
+            yield record
 
 
 DISSECTOR = Dissector(

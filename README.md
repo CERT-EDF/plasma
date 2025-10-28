@@ -34,7 +34,7 @@ Plasma releases are available on Github and Pypi. Use Python 3.12+ and a virtual
 
 ```bash
 # Setup plasma to use as a library
-python3 -m pip install edf-plasma-dissectors
+python3 -m pip install edf-plasma-dissectors[pcap,linux,binary,memdump,windows]
 # Setup plasma to use as a command line tool
 python3 -m pip install edf-plasma-cli
 # Display integrated help

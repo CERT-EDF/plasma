@@ -9,28 +9,24 @@ from edf_plasma_core.dissector import (
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import RecordIterator
 
-from .helper import (
-    IP,
-    UDP,
-    IPv6,
-    Peer,
-    PeerPair,
-    UDPConversations,
-    select_pcap_impl,
-    stream_pcap_packets,
-)
+from .helper import select_pcap_impl, stream_pcap_packets
+from .helper.conv import Peer, PeerPair
+from .helper.ipv4 import has_ipv4, ipv4_layer
+from .helper.ipv6 import ipv6_layer
+from .helper.udp import has_udp, udp_layer
+from .helper.udp_conv import UDPConversations
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     udp_convs = UDPConversations()
     for pkt in stream_pcap_packets(ctx.filepath):
-        if UDP not in pkt:
+        if not has_udp(pkt):
             continue
-        src_addr = pkt[IP].src if IP in pkt else pkt[IPv6].src
-        dst_addr = pkt[IP].dst if IP in pkt else pkt[IPv6].dst
+        tp_layer = udp_layer(pkt)
+        ip_layer = ipv4_layer(pkt) if has_ipv4(pkt) else ipv6_layer(pkt)
         peer_pair = PeerPair(
-            src_peer=Peer(addr=src_addr, port=pkt[UDP].sport),
-            dst_peer=Peer(addr=dst_addr, port=pkt[UDP].dport),
+            src_peer=Peer(addr=ip_layer.src, port=tp_layer.sport),
+            dst_peer=Peer(addr=ip_layer.dst, port=tp_layer.dport),
         )
         udp_convs.append(peer_pair, pkt)
     for conv in udp_convs.conversations():
