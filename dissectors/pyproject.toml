@@ -23,6 +23,7 @@ dependencies = [
     "edf-plasma-core~=1.0",
     "scapy~=2.5",
     "lief~=0.14",
+    "volatility3~=2.26",
     "systemd-python",
     "construct~=2.10",
     "liblnk-python",

@@ -1,13 +1,14 @@
 """Plasma main program"""
 
 from argparse import ArgumentParser
-from importlib.util import spec_from_file_location, module_from_spec
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-from sys import modules, exit as sys_exit
+from sys import exit as sys_exit
+from sys import modules
 
-from edf_plasma_core.helper.logging import get_logger
 # load dissectors
 import edf_plasma_dissectors as _
+from edf_plasma_core.helper.logging import get_logger
 
 from .__version__ import version
 from .command import Format, setup_commands
