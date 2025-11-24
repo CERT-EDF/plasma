@@ -11,7 +11,7 @@ from edf_plasma_core.helper.typing import RecordIterator
 
 from .helper import select_pcap_impl, stream_pcap_packets
 from .helper.packet import pkt_base_record
-from .helper.tls import has_tls_srv_hello, tls_srv_hello_layer, compute_ja3s
+from .helper.tls import compute_ja3s, has_tls_srv_hello, tls_srv_hello_layer
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

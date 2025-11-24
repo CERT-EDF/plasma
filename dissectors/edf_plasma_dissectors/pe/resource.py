@@ -33,9 +33,9 @@ def _get_child_node(child_node):
 
 def _best_ident(data: bytes, magika: Magika) -> str:
     ident_result = identify_bytes(data, magika=magika)
-    if ident_result.magika_output != 'application/octet-stream':
-        return ident_result.magika_output
-    return ident_result.magic_output
+    if ident_result.magika_mime != 'application/octet-stream':
+        return ident_result.magika_mime
+    return ident_result.magic_mime
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
