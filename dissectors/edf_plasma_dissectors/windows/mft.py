@@ -10,13 +10,13 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.datetime import macb_groups, to_iso_fmt, with_utc
 from edf_plasma_core.helper.glob import ci_glob_pattern
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 from .helper.fsntfs import mft_metadata_file
 from .parser.mft import parse_file_name_flags
 
-_PATTERN = ci_glob_pattern('$MFT')
 _NAMESPACE_DOS = 2
 _ATTR_DATA = 0x80
 _ATTR_FILE_NAME = 0x30
@@ -91,10 +91,8 @@ def _parse_mft_entry(mft_entry) -> RecordIterator:
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = ci_glob_pattern('$MFT')
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

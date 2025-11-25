@@ -12,6 +12,7 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -72,9 +73,7 @@ _PARSE_FUNC_MAP = {
 
 def _select_impl(directory: Path) -> PathIterator:
     for pattern, check_file_signature_func in _CHECK_FUNC_MAP.items():
-        for filepath in directory.rglob(pattern):
-            if not filepath.is_file():
-                continue
+        for filepath in select(directory, pattern):
             if not check_file_signature_func(filepath):
                 _LOGGER.warning(
                     "jumplist signature check failed: %s", filepath

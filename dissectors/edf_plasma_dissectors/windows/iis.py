@@ -9,10 +9,10 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.glob import ci_glob_pattern
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_PATTERN = ci_glob_pattern('u_ex*.log')
 _FIELD_MAPPING = {
     'date': 'date',
     'time': 'time',
@@ -48,10 +48,8 @@ def _int_val(val):
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = ci_glob_pattern('u_ex*.log')
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

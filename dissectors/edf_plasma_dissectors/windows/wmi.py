@@ -9,17 +9,14 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.json import dumps, read_jsonl
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(
-        'Windows.Persistence.PermanentWMIEvents.json'
-    ):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'Windows.Persistence.PermanentWMIEvents.json'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

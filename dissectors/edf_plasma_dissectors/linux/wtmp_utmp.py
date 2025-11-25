@@ -19,14 +19,9 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.datetime import from_unix_timestamp, to_iso_fmt
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
-
-_GLOB_PATTERNS = (
-    'utmp*',
-    'wtmp*',
-    'btmp*',
-)
 
 ExitStatus = Struct(
     'e_termination' / Int16sl,
@@ -61,11 +56,9 @@ def _utmp_read(utmp_path: Path) -> Iterator[Container]:
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for pattern in _GLOB_PATTERNS:
-        for filepath in directory.rglob(pattern):
-            if not filepath.is_file():
-                continue
-            yield filepath
+    patterns = ('utmp*', 'wtmp*', 'btmp*')
+    for pattern in patterns:
+        yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

@@ -10,6 +10,7 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.logging import get_logger
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import (
     lines_from_filepath,
     lines_from_gz_filepath,
@@ -18,10 +19,6 @@ from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 _LOGGER = get_logger('dissectors.linux.authlog')
-_GLOB_PATTERNS = (
-    'secure*',
-    'auth.log*',
-)
 _OLD_PATTERN = regexp(
     r'(?P<time>\w+\s+\d+\s+\d+:\d+:\d+)\s+(?P<host>[^\s]+)\s(?P<source>[^:]+):\s(?P<message>.*)'
 )
@@ -31,11 +28,12 @@ _NEW_PATTERN = regexp(
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for pattern in _GLOB_PATTERNS:
-        for filepath in directory.rglob(pattern):
-            if not filepath.is_file():
-                continue
-            yield filepath
+    patterns = (
+        'secure*',
+        'auth.log*',
+    )
+    for pattern in patterns:
+        yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

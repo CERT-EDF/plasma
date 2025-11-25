@@ -9,6 +9,7 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -18,10 +19,8 @@ _PATTERN = regexp(
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob('mount.txt'):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'mount.txt'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

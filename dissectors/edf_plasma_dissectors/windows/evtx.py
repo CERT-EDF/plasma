@@ -11,6 +11,7 @@ from edf_plasma_core.dissector import (
 from edf_plasma_core.helper.datetime import to_iso_fmt, with_utc
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 from edf_plasma_core.helper.xml import check_xml_parser_safety
@@ -25,16 +26,14 @@ from .helper.evtx import (
 from .xml.evtx import Event
 
 _LOGGER = get_logger('dissectors.windows.evtx')
-_PATTERN = ci_glob_pattern('*.evtx')
 
 
 def _select_impl(directory: Path) -> PathIterator:
     if not check_xml_parser_safety():
         _LOGGER.error("XML parser is not safe!")
         return
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
+    pattern = ci_glob_pattern('*.evtx')
+    for filepath in select(directory, pattern):
         if not check_file_signature(filepath):
             _LOGGER.warning("signature check failed for %s", filepath)
             continue

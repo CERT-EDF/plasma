@@ -8,22 +8,19 @@ from edf_plasma_core.dissector import (
     Dissector,
     register_dissector,
 )
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import lines_from_filepath
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERNS = (
-    'etc/at.deny',
-    'etc/at.allow',
-)
-
 
 def _select_impl(directory: Path) -> PathIterator:
-    for fnmatch_pattern in _GLOB_PATTERNS:
-        for filepath in directory.rglob(fnmatch_pattern):
-            if not filepath.is_file():
-                continue
-            yield filepath
+    patterns = (
+        'etc/at.deny',
+        'etc/at.allow',
+    )
+    for pattern in patterns:
+        yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

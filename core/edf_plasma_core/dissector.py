@@ -3,6 +3,7 @@
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
+from queue import Queue
 
 from .concept import Tag
 from .helper.datetime import datetime, to_iso_fmt, utc_now
@@ -126,36 +127,49 @@ class Dissector:
             perfmeter.elapsed,
         )
 
-    def dissect_many(self, ctx_list: DissectionContextList) -> RecordIterator:
+    def dissect_many(
+        self,
+        queue_in: Queue[DissectionContextList | None],
+        queue_out: Queue[DissectionContextList | None],
+    ) -> RecordIterator:
         """Yield records from many dissection context"""
-        _LOGGER.info(
-            "dissect many start: %s (files=%d)",
-            self.slug,
-            len(ctx_list),
-        )
+        _LOGGER.info("dissect many start: %s", self.slug)
         perfmeter = PerformanceMeter()
+        error_count = 0
         with perfmeter:
-            for ctx in ctx_list:
+            while True:
+                ctx = queue_in.get()
+                if not ctx:
+                    queue_out.put(None)
+                    break
+                perfmeter.tick()
                 try:
                     yield from self.dissect(ctx)
+                except PermissionError:
+                    ctx.register_error(f"permission error: {ctx.filepath}")
                 except:
                     _LOGGER.exception("dissector exception: %s", self.slug)
                     ctx.register_error(
                         "dissector raised an unhandled exception, please create an issue!"
                     )
+                error_count += len(ctx.errors)
+                queue_out.put(ctx)
         _LOGGER.info(
             "dissection many complete: %s (files=%d, errors=%d, time=%s)",
             self.slug,
-            len(ctx_list),
-            sum(len(ctx.errors) for ctx in ctx_list),
+            perfmeter.count,
+            error_count,
             perfmeter.elapsed,
         )
 
     def process_errors(
-        self, ctx_list: DissectionContextList
+        self, queue: Queue[DissectionContextList | None]
     ) -> RecordIterator:
         """Yield errors from context list"""
-        for ctx in ctx_list:
+        while True:
+            ctx = queue.get()
+            if not ctx:
+                break
             yield from ctx.errors_as_records()
 
 

@@ -10,21 +10,19 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.datetime import from_unix_timestamp, to_iso_fmt
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import lines_from_filepath
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERN = 'usbguard*.log*'
 _PATTERN = regexp(
     r'\[(?P<timestamp>[\d\.]+)[^\(]+(?P<level>\(.\)) uid=(?P<uid>[\d]+) pid=(?P<pid>[\d]+) result=\'(?P<result>[^\']+)\' device\.system_name=\'(?P<devicename>[^\']+)\' target\.new=\'(?P<targetnew>[^\']+)\' device.rule=\'(?P<devicerule>[^\']+)\' target\.old=\'(?P<targetold>[^\']+)\' type=\'(?P<type>[^\']+).*'
 )
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_GLOB_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'usbguard*.log*'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

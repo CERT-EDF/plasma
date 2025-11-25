@@ -2,6 +2,8 @@
 
 from pathlib import Path
 from platform import node
+from queue import Queue
+from threading import Thread
 
 from edf_plasma_core.dissector import (
     DissectionContext,
@@ -19,11 +21,14 @@ from .abc import FileFormat, display_table
 
 _LOGGER = get_logger('cli.command.dissect')
 _HOSTNAME_REPL_PATTERN = regexp(r'[^\w]+')
-_OUTPUT_FORMAT_STRATEGY = {
-    FileFormat.CSV: ('.csv.gz', write_csv_gz),
+_EXTENSION_STRATEGY = {
+    FileFormat.CSV: '.csv.gz',
+    FileFormat.JSONL: '.jsonl.gz',
+}
+_WRITE_FUNC_STRATEGY = {
+    FileFormat.CSV: write_csv_gz,
     FileFormat.JSONL: (
-        '.jsonl.gz',
-        lambda filepath, _, records: write_jsonl_gz(filepath, records),
+        lambda filepath, _, records: write_jsonl_gz(filepath, records)
     ),
 }
 _GETATTR_STRATEGY = {
@@ -43,6 +48,55 @@ def _select(filter_spec: str, dissectors: DissectorList) -> DissectorList:
     ]
 
 
+def _selection_routine(
+    processing_queue: Queue,
+    dissector: Dissector,
+    hostname: str,
+    target: Path,
+):
+    selected_targets = [target]
+    if target.is_dir():
+        selected_targets = dissector.select(target)
+    for selected_target in selected_targets:
+        ctx = DissectionContext(
+            dissector=dissector.slug,
+            hostname=hostname,
+            source=str(selected_target),
+            filepath=selected_target,
+        )
+        processing_queue.put(ctx)
+    processing_queue.put(None)
+
+
+def _rec_processing_routine(
+    post_processing_queue: Queue,
+    processing_queue: Queue,
+    out_filepath: Path,
+    file_format: FileFormat,
+    dissector: Dissector,
+):
+    write_records_to_file = _WRITE_FUNC_STRATEGY[file_format]
+    write_records_to_file(
+        out_filepath,
+        dissector.table_schema.names,
+        dissector.dissect_many(processing_queue, post_processing_queue),
+    )
+
+
+def _err_processing_routine(
+    post_processing_queue: Queue,
+    err_filepath: Path,
+    file_format: FileFormat,
+    dissector: Dissector,
+):
+    write_records_to_file = _WRITE_FUNC_STRATEGY[file_format]
+    write_records_to_file(
+        err_filepath,
+        dissector.error_table_schema.names,
+        dissector.process_errors(post_processing_queue),
+    )
+
+
 def _run_dissector(
     dissector: Dissector,
     target: Path,
@@ -51,36 +105,50 @@ def _run_dissector(
     prefix: bool,
     output_directory: Path,
 ) -> tuple[Path, Path]:
-    targets = [target]
-    if target.is_dir():
-        targets = list(dissector.select(target))
     hostname = _HOSTNAME_REPL_PATTERN.sub('_', hostname).upper()
-    ctx_list = [
-        DissectionContext(
-            dissector=dissector.slug,
-            hostname=hostname,
-            source=str(target),
-            filepath=target,
-        )
-        for target in targets
-    ]
     prefix = f'{hostname}_' if prefix else ''
     output_directory.mkdir(parents=True, exist_ok=True)
-    extension, write_records_to_file = _OUTPUT_FORMAT_STRATEGY[file_format]
+    extension = _EXTENSION_STRATEGY[file_format]
     out_filepath = output_directory / f'{prefix}{dissector.slug}{extension}'
     err_filepath = (
         output_directory / f'{prefix}{dissector.slug}_error{extension}'
     )
-    write_records_to_file(
-        out_filepath,
-        dissector.table_schema.names,
-        dissector.dissect_many(ctx_list),
+    processing_queue = Queue(maxsize=5)
+    post_processing_queue = Queue(maxsize=5)
+    producer = Thread(
+        target=_selection_routine,
+        args=(
+            processing_queue,
+            dissector,
+            hostname,
+            target,
+        ),
     )
-    write_records_to_file(
-        err_filepath,
-        dissector.error_table_schema.names,
-        dissector.process_errors(ctx_list),
+    rec_consumer = Thread(
+        target=_rec_processing_routine,
+        args=(
+            post_processing_queue,
+            processing_queue,
+            out_filepath,
+            file_format,
+            dissector,
+        ),
     )
+    err_consumer = Thread(
+        target=_err_processing_routine,
+        args=(
+            post_processing_queue,
+            err_filepath,
+            file_format,
+            dissector,
+        ),
+    )
+    err_consumer.start()
+    rec_consumer.start()
+    producer.start()
+    producer.join()
+    rec_consumer.join()
+    err_consumer.join()
     return out_filepath, err_filepath
 
 

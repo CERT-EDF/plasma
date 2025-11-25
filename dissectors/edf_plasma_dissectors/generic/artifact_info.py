@@ -12,6 +12,7 @@ from edf_plasma_core.helper.identifying import (
     identify_filepath,
     instanciate_magika,
 )
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -19,7 +20,7 @@ _MAGIKA = instanciate_magika()
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    yield from directory.rglob('*')
+    yield from select(directory, '*')
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

@@ -11,13 +11,13 @@ from edf_plasma_core.dissector import (
 from edf_plasma_core.helper.datetime import from_win32_timestamp, to_iso_fmt
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 from .helper import SQLiteDatabase, check_file_signature
 
 _LOGGER = get_logger('dissectors.generic.chromium')
-_PATTERN = ci_glob_pattern('History')
 _CHROMIUM_VISIT_SQL_STMT = '''
 SELECT visit_time,urls.url
 FROM urls
@@ -49,9 +49,8 @@ def _parse_chromium_db(sql_db):
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
+    pattern = ci_glob_pattern('History')
+    for filepath in select(directory, pattern):
         if not check_file_signature(filepath):
             _LOGGER.warning("signature check failed for: %s", filepath)
             continue

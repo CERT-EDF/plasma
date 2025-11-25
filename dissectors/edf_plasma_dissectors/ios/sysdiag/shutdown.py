@@ -11,6 +11,7 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.datetime import datetime, to_iso_fmt, with_utc
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -21,10 +22,8 @@ _REMAINING_PATTERN = regexp(
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob('Extra/shutdown.log'):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'Extra/shutdown.log'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

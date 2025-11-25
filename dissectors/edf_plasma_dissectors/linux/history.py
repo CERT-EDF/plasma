@@ -10,19 +10,13 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.datetime import from_unix_timestamp, to_iso_fmt
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import lines_from_filepath
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, Record, RecordIterator
 
 _ZSH_TS_PATTERN = regexp(r':\s+(?P<timestamp>\d+):\d+;(?P<command>.*)')
 _BASH_TS_PATTERN = regexp(r'#(?P<timestamp>\d+)')
-_GLOB_PATTERNS = (
-    'root/.*_history',
-    'home/*/.*_history',
-    # velociraptor collected files have an url-encoded dot
-    'root/%2E*_history',
-    'home/*/%2E*_history',
-)
 
 
 def _parse_default(line: str, _state: dict) -> Record:
@@ -64,11 +58,15 @@ _PARSER_STRATEGY = {
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for fnmatch_pattern in _GLOB_PATTERNS:
-        for filepath in directory.rglob(fnmatch_pattern):
-            if not filepath.is_file():
-                continue
-            yield filepath
+    patterns = (
+        'root/.*_history',
+        'home/*/.*_history',
+        # velociraptor collected files have an url-encoded dot
+        'root/%2E*_history',
+        'home/*/%2E*_history',
+    )
+    for pattern in patterns:
+        yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

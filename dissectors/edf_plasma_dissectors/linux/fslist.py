@@ -10,10 +10,10 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.json import read_jsonl
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERN = 'Linux.Collector.FileMetadata%2FCollection.json'
 _PATTERN = regexp(
     r'\s+'.join(
         [
@@ -34,10 +34,8 @@ _PATTERN = regexp(
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_GLOB_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'Linux.Collector.FileMetadata%2FCollection.json'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

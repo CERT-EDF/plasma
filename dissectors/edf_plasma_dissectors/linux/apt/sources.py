@@ -13,15 +13,11 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import lines_from_filepath
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERNS = (
-    'sources.list',
-    'sources.list.d/*.list',
-    'sources.list.d/*.sources',
-)
 _PATTERN = regexp(
     r'(?P<type>[^#\s]+)\s+(\[[^\]]+\]\s+)?(?P<url>[^\s]+)\s+(?P<suite>[^\s]+)\s+(?P<components>.*)'
 )
@@ -119,11 +115,13 @@ _DISSECT_STRATEGY = {'.sources': _dissect_sources}
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for fnmatch_pattern in _GLOB_PATTERNS:
-        for filepath in directory.rglob(fnmatch_pattern):
-            if not filepath.is_file():
-                continue
-            yield filepath
+    patterns = (
+        'sources.list',
+        'sources.list.d/*.list',
+        'sources.list.d/*.sources',
+    )
+    for pattern in patterns:
+        yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

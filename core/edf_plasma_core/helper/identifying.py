@@ -47,7 +47,6 @@ def identify_filepath(
     """Identify content type/format from filepath"""
     magika = magika or instanciate_magika()
     magika_result: MagikaResult = magika.identify_path(filepath)
-    print(magika_result.output)
     return IdentificationResult(
         magic_mime=from_file(filepath, mime=True),
         magic_info=from_file(filepath, mime=False),
