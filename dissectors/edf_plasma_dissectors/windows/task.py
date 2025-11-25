@@ -9,6 +9,7 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 from edf_plasma_core.helper.xml import check_xml_file, check_xml_parser_safety
@@ -23,9 +24,7 @@ def _select_impl(directory: Path) -> PathIterator:
         _LOGGER.warning("XML parser is not safe!")
         return
     for dirpath in directory.rglob('Tasks'):
-        for filepath in dirpath.rglob('*'):
-            if not filepath.is_file():
-                continue
+        for filepath in select(dirpath, '*'):
             if not check_xml_file(filepath):
                 _LOGGER.warning("XML task parsing check failed: %s", filepath)
                 continue

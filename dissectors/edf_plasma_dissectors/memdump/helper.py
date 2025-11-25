@@ -9,6 +9,7 @@ from threading import Event, Lock
 
 from edf_plasma_core.helper.importing import lazy_import
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.typing import PathIterator
 
 lazy_plugins = lazy_import('volatility3.plugins')
@@ -44,7 +45,7 @@ def is_memdump(filepath: Path):
 
 def select_memdump_impl(directory: Path) -> PathIterator:
     """Select memdump files in directory"""
-    for filepath in directory.rglob('*'):
+    for filepath in select(directory, '*'):
         if not is_memdump(filepath):
             continue
         yield filepath

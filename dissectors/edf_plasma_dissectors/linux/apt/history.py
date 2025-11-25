@@ -8,6 +8,7 @@ from edf_plasma_core.dissector import (
     Dissector,
     register_dissector,
 )
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import (
     lines_from_filepath,
     lines_from_gz_filepath,
@@ -15,7 +16,6 @@ from edf_plasma_core.helper.streaming import (
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERN = 'log/apt/history.log*'
 _END_TIME = 'End-Date: '
 _BEG_TIME = 'Start-Date: '
 _COMMANDLINE = 'Commandline: '
@@ -27,10 +27,8 @@ def _parse_kv(line: str):
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_GLOB_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'log/apt/history.log*'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

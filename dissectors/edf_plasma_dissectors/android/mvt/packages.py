@@ -9,15 +9,13 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.json import read_json
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob('packages.json'):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    yield from select(directory, 'packages.json')
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

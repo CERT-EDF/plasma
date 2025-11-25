@@ -11,6 +11,7 @@ from edf_plasma_core.dissector import (
 from edf_plasma_core.helper.datetime import to_iso_fmt
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -25,7 +26,6 @@ from .helper.scca import (
 )
 
 _LOGGER = get_logger('dissectors.windows.prefetch')
-_PATTERN = ci_glob_pattern('*.pf')
 
 
 def _parse_prefetch(ctx: DissectionContext):
@@ -56,9 +56,8 @@ def _parse_prefetch(ctx: DissectionContext):
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
+    pattern = ci_glob_pattern('*.pf')
+    for filepath in select(directory, pattern):
         if not check_file_signature(filepath):
             _LOGGER.warning("prefetch signature check failed: %s", filepath)
             continue

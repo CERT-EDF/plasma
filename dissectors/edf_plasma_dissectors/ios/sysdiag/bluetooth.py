@@ -8,15 +8,14 @@ from edf_plasma_core.dissector import (
     Dissector,
     register_dissector,
 )
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob('WiFi/bluetooth_status.txt'):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'WiFi/bluetooth_status.txt'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

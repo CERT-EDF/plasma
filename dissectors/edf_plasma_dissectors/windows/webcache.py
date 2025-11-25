@@ -11,6 +11,7 @@ from edf_plasma_core.dissector import (
 from edf_plasma_core.helper.datetime import from_win32_timestamp, to_iso_fmt
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -21,14 +22,12 @@ from .helper.esedb import (
 )
 
 _LOGGER = get_logger('dissectors.windows.webcache')
-_PATTERN = ci_glob_pattern('WebCacheV01.dat')
 _SUPPORTED_NAMES = {'History', 'Cookies', 'iedownload'}
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
+    pattern = ci_glob_pattern('WebCacheV01.dat')
+    for filepath in select(directory, pattern):
         if not check_file_signature(filepath):
             _LOGGER.warning("webcache signature check failed: %s", filepath)
             continue

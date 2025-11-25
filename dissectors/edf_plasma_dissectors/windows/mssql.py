@@ -10,20 +10,18 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_PATTERN = ci_glob_pattern('ERRORLOG*')
 _LINE_PATTERN = regexp(
     r'(?P<date>[^\s]+)\s+(?P<time>[^\s]+)\s+(?P<category>[^\s]+)\s+(?P<message>.*)\s+\[CLIENT: (?P<client>[^\]]+)\]'
 )
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = ci_glob_pattern('ERRORLOG*')
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

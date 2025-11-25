@@ -10,17 +10,14 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.json import read_jsonl
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERN = 'Linux.Network.Netstat.json'
-
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_GLOB_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'Linux.Network.Netstat.json'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

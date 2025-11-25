@@ -10,6 +10,7 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 from edf_plasma_core.helper.xml import check_xml_parser_safety
@@ -17,17 +18,14 @@ from edf_plasma_core.helper.xml import check_xml_parser_safety
 from .xml.appx import AppXManifest
 
 _LOGGER = get_logger('dissectors.windows.appx')
-_PATTERN = ci_glob_pattern('AppXManifest.xml')
 
 
 def _select_impl(directory: Path) -> PathIterator:
     if not check_xml_parser_safety():
         _LOGGER.error("XML parser is not safe!")
         return
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = ci_glob_pattern('AppXManifest.xml')
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

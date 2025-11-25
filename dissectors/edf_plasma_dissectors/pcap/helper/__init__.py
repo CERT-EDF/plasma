@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from edf_plasma_core.helper.importing import lazy_import
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.typing import PathIterator
 
 lazy_scapy = lazy_import('scapy.all')
@@ -27,7 +28,7 @@ def is_pcap(filepath: Path):
 
 def select_pcap_impl(directory: Path) -> PathIterator:
     """Select pcap files in directory"""
-    for filepath in directory.rglob('*.pcap'):
+    for filepath in select(directory, '*.pcap'):
         if not is_pcap(filepath):
             continue
         yield filepath

@@ -10,6 +10,7 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -17,13 +18,11 @@ from .helper.lnk import check_file_signature, open_file_object
 from .parser.lnk import lnk_records
 
 _LOGGER = get_logger('dissectors.windows.lnk')
-_PATTERN = ci_glob_pattern('*.lnk')
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
+    pattern = ci_glob_pattern('*.lnk')
+    for filepath in select(directory, pattern):
         if not check_file_signature(filepath):
             _LOGGER.warning("link signature check failed: %s", filepath)
             continue

@@ -12,11 +12,11 @@ from edf_plasma_core.dissector import (
     Dissector,
     register_dissector,
 )
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import lines_from_filepath
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERN = 'logrotate.d/*'
 _KEYWORD = {
     'compress',
     'compresscmd',
@@ -193,10 +193,8 @@ def _parse_block_entry(lcctx: LCContext, line: str) -> bool:
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_GLOB_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'logrotate.d/*'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

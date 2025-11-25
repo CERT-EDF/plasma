@@ -9,17 +9,14 @@ from edf_plasma_core.dissector import (
     Dissector,
     register_dissector,
 )
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERN = 'yum.repos.d/*.repo'
-
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_GLOB_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'yum.repos.d/*.repo'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

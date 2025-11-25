@@ -16,6 +16,7 @@ from edf_plasma_core.helper.datetime import (
 )
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -26,7 +27,6 @@ from .helper.esedb import (
 )
 
 _LOGGER = get_logger('dissectors.windows.srudb')
-_PATTERN = ci_glob_pattern('SRUDB.dat')
 
 
 def _parse_app(data: bytes | None) -> str:
@@ -78,9 +78,8 @@ def _srudb_records(ctx: DissectionContext):
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_PATTERN):
-        if not filepath.is_file():
-            continue
+    pattern = ci_glob_pattern('SRUDB.dat')
+    for filepath in select(directory, pattern):
         if not check_file_signature(filepath):
             _LOGGER.warning("srudb signature check failed: %s", filepath)
             continue

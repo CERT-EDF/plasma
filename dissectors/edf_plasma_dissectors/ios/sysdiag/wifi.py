@@ -10,17 +10,14 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.datetime import to_iso_fmt, with_utc
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(
-        'WiFi/com.apple.wifi-private-mac-networks.plist'
-    ):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'WiFi/com.apple.wifi-private-mac-networks.plist'
+    yield from select(directory, pattern)
 
 
 def _get_iso_date(ap_info, member) -> str:

@@ -5,6 +5,7 @@ from pathlib import Path
 from edf_plasma_core.dissector import DissectionContext
 from edf_plasma_core.helper.importing import lazy_import
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.typing import PathIterator
 
 lazy_lief = lazy_import('lief')
@@ -15,9 +16,7 @@ _LOGGER = get_logger('dissectors.elf.helper')
 
 def select_elf_impl(directory: Path) -> PathIterator:
     """Select ELF implementation"""
-    for filepath in directory.rglob('*'):
-        if not filepath.is_file():
-            continue
+    for filepath in select(directory, '*'):
         if not lazy_lief.is_elf(str(filepath)):
             if filepath.suffix in {'.so'}:
                 _LOGGER.warning(

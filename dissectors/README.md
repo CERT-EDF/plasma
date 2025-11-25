@@ -52,6 +52,7 @@ from edf_plasma_core.dissector import (
 from edf_plasma_core.helper.datetime import from_unix_timestamp, to_iso_fmt
 from edf_plasma_core.helper.logging import get_logger
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import (
     lines_from_filepath,
     lines_from_gz_filepath,
@@ -73,10 +74,7 @@ _PATTERN = regexp(
 # usually walks through it recursively yielding path for files it can dissect.
 # ------------------------------------------------------------------------------
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_GLOB_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    yield from select(directory, _GLOB_PATTERN)
 # ------------------------------------------------------------------------------
 # implement the dissector dissection routine
 #

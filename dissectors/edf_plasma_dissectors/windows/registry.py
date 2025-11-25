@@ -11,6 +11,7 @@ from edf_plasma_core.dissector import (
 from edf_plasma_core.helper.datetime import to_iso_fmt, with_utc
 from edf_plasma_core.helper.glob import ci_glob_pattern
 from edf_plasma_core.helper.logging import get_logger
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
@@ -89,22 +90,18 @@ def _registry_records(ctx: DissectionContext):
         yield from _scan_registry(ctx, root_key)
 
 
-_REGISTRIES = (
-    ci_glob_pattern('SYSTEM'),
-    ci_glob_pattern('SAM'),
-    ci_glob_pattern('SECURITY'),
-    ci_glob_pattern('SOFTWARE'),
-    ci_glob_pattern('DEFAULT'),
-    ci_glob_pattern('NTUSER.DAT'),
-    ci_glob_pattern('Amcache.hve'),
-)
-
-
 def _select_impl(directory: Path) -> PathIterator:
-    for filename in _REGISTRIES:
-        for filepath in directory.rglob(filename):
-            if not filepath.is_file():
-                continue
+    patterns = (
+        ci_glob_pattern('SYSTEM'),
+        ci_glob_pattern('SAM'),
+        ci_glob_pattern('SECURITY'),
+        ci_glob_pattern('SOFTWARE'),
+        ci_glob_pattern('DEFAULT'),
+        ci_glob_pattern('NTUSER.DAT'),
+        ci_glob_pattern('Amcache.hve'),
+    )
+    for pattern in patterns:
+        for filepath in select(directory, pattern):
             if not check_file_signature(filepath):
                 _LOGGER.warning(
                     "registry signature check failed: %s", filepath

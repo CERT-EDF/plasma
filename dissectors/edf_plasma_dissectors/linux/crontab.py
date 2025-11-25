@@ -9,15 +9,11 @@ from edf_plasma_core.dissector import (
     register_dissector,
 )
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import lines_from_filepath
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERNS = (
-    'etc/crontab',
-    'etc/cron.d/*',
-    'var/spool/cron/crontabs/*',
-)
 _ETC_PATTERN = regexp(
     r'(?P<min>[^#\s]+)\s+(?P<hour>[^\s]+)\s+(?P<mday>[^\s]+)\s+(?P<month>[^\s]+)\s+(?P<wday>[^\s]+)\s+(?P<username>[^\s]+)\s+(?P<command>.*)'
 )
@@ -27,11 +23,13 @@ _VAR_PATTERN = regexp(
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for fnmatch_pattern in _GLOB_PATTERNS:
-        for filepath in directory.rglob(fnmatch_pattern):
-            if not filepath.is_file():
-                continue
-            yield filepath
+    patterns = (
+        'etc/crontab',
+        'etc/cron.d/*',
+        'var/spool/cron/crontabs/*',
+    )
+    for pattern in patterns:
+        yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

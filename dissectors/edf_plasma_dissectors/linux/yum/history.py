@@ -10,6 +10,7 @@ from edf_plasma_core.dissector import (
 )
 from edf_plasma_core.helper.datetime import from_iso_fmt, to_iso_fmt, to_utc
 from edf_plasma_core.helper.matching import regexp
+from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.streaming import (
     lines_from_filepath,
     lines_from_gz_filepath,
@@ -17,17 +18,14 @@ from edf_plasma_core.helper.streaming import (
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERN = 'log/dnf.log*'
 _PATTERN = regexp(
     r'(?P<time>[^\s]+)\s+DDEBUG\s+Command:\s+(?P<command>yum\s+.*)'
 )
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for filepath in directory.rglob(_GLOB_PATTERN):
-        if not filepath.is_file():
-            continue
-        yield filepath
+    pattern = 'log/dnf.log*'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
