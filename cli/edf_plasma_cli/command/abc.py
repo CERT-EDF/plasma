@@ -24,22 +24,33 @@ class FileFormat(Enum):
     JSONL = 'jsonl'
 
 
-def display_table(out_fmt: Format, headers, rows, **kwargs):
-    """Build and print table"""
-    final_kwargs = {
-        'box': ROUNDED,
-        'row_styles': ['dim', ''],
-    }
-    final_kwargs.update(kwargs)
-    if out_fmt == Format.RICH:
-        final_headers = [
-            Column(header) if isinstance(header, str) else Column(**header)
-            for header in headers
-        ]
-        table = Table(*final_headers, **final_kwargs)
-        for row in rows:
-            table.add_row(*row)
-        CONSOLE.print(table)
-        return
+def _display_table_rich(headers, rows, **kwargs):
+    kwargs.update({'box': ROUNDED, 'row_styles': ['dim', '']})
+    headers = [
+        Column(header) if isinstance(header, str) else Column(**header)
+        for header in headers
+    ]
+    table = Table(*headers, **kwargs)
+    for row in rows:
+        table.add_row(*row)
+    CONSOLE.print(table)
+
+
+def _display_table_json(headers, rows, **kwargs):
+    headers = [
+        header if isinstance(header, str) else header['header']
+        for header in headers
+    ]
     for row in rows:
         print(dumps(dict(zip(headers, row))))
+
+
+_DISPLAY_TABLE_STRATEGY = {
+    Format.RICH: _display_table_rich,
+    Format.JSON: _display_table_json,
+}
+
+
+def display_table(out_fmt: Format, headers, rows, **kwargs):
+    """Build and print table"""
+    _DISPLAY_TABLE_STRATEGY[out_fmt](headers, rows, **kwargs)
