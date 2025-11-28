@@ -1,4 +1,4 @@
-"""Linux Memory Proces List Dissector"""
+"""Linux Processes (Carved) Memory Dissector"""
 
 from edf_plasma_core.concept import Tag
 from edf_plasma_core.dissector import (
@@ -15,18 +15,14 @@ from ..helper import (
     setup_volatility3_framework,
 )
 
-_VOL_PLUGIN = 'linux.pslist.PsList'
+_VOL_PLUGIN = 'linux.psscan.PsScan'
 _VOL_FIELDS_MAPPING = {
-    'OFFSET (V)': 'virt_offset',
+    'COMM': 'process',
+    'EXIT_STATE': 'exit_state',
+    'OFFSET (P)': 'phys_offset',
     'PID': 'pid',
-    'TID': 'tid',
     'PPID': 'ppid',
-    'COMM': 'comm',
-    'UID': 'uid',
-    'GID': 'gid',
-    'EUID': 'euid',
-    'EGID': 'egid',
-    'CREATION TIME': 'create_time',
+    'TID': 'tid',
 }
 
 
@@ -37,21 +33,17 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
 
 
 DISSECTOR = Dissector(
-    slug='memdump_linux_pslist',
+    slug='memdump_linux_ps_scan',
     tags={Tag.MEMDUMP, Tag.LINUX},
     columns=[
-        Column('virt_offset', DataType.INT),
         Column('pid', DataType.INT),
-        Column('tid', DataType.INT),
         Column('ppid', DataType.INT),
-        Column('comm', DataType.STR),
-        Column('uid', DataType.INT),
-        Column('gid', DataType.INT),
-        Column('euid', DataType.INT),
-        Column('egid', DataType.INT),
-        Column('create_time', DataType.STR),
+        Column('tid', DataType.INT),
+        Column('process', DataType.STR),
+        Column('exit_state', DataType.STR),
+        Column('phys_offset', DataType.INT),
     ],
-    description="Linux process list from memory dump",
+    description="Linux processes (carved) from memory dump",
     select_impl=select_memdump_impl,
     dissect_impl=_dissect_impl,
 )
