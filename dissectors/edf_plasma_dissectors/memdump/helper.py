@@ -97,7 +97,12 @@ def _multitypedata_as_text(
 def _invalid(val):
     renderers = lazy_framework.renderers
     return isinstance(
-        val, (renderers.UnparsableValue, renderers.NotApplicableValue)
+        val,
+        (
+            renderers.UnparsableValue,
+            renderers.NotAvailableValue,
+            renderers.NotApplicableValue,
+        ),
     )
 
 
