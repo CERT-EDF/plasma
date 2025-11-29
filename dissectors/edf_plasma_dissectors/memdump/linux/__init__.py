@@ -1,5 +1,4 @@
-"""Plasma Linux Memory Dissectors
-"""
+"""Plasma Linux Memory Dissectors"""
 
 from ..helper import VOLATILITY3_AVAILABLE
 
