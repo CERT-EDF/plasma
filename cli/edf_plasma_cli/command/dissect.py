@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from fnmatch import fnmatchcase
 from functools import cached_property
 from pathlib import Path
 from platform import node
@@ -16,7 +17,6 @@ from edf_plasma_core.dissector import (
     get_dissectors,
 )
 from edf_plasma_core.helper.csv import write_csv_gz
-from edf_plasma_core.helper.filtering import Filter
 from edf_plasma_core.helper.json import write_jsonl_gz
 from edf_plasma_core.helper.logging import get_logger
 from edf_plasma_core.helper.matching import regexp
@@ -36,10 +36,6 @@ _WRITE_FUNC_STRATEGY = {
     FileFormat.JSONL: (
         lambda filepath, _, records: write_jsonl_gz(filepath, records)
     ),
-}
-_GETATTR_STRATEGY = {
-    'slug': lambda dissector: {dissector.slug},
-    'tags': lambda dissector: {tag.value for tag in dissector.tags},
 }
 
 
@@ -83,15 +79,65 @@ class DissectorContext:
         return self.output_directory / filename
 
 
-def _select(filter_spec: str, dissectors: DissectorList) -> DissectorList:
-    attribute, values = filter_spec.split(':', 1)
-    filter_ = Filter(include=set(values.split(',')))
-    getattr_ = _GETATTR_STRATEGY[attribute]
-    return [
-        dissector
-        for dissector in dissectors
-        if filter_.accept(getattr_(dissector))
-    ]
+def _select_tags(values: list[str], dissectors: DissectorList):
+    or_tags = set()
+    and_tags = set()
+    not_tags = set()
+    for val in values:
+        if val.startswith('+'):
+            and_tags.add(val[1:])
+        elif val.startswith('-'):
+            not_tags.add(val[1:])
+        else:
+            or_tags.add(val)
+    selection = []
+    for dissector in dissectors:
+        tags = {tag.value for tag in dissector.tags}
+        if not_tags and not_tags.intersection(tags):
+            continue
+        if and_tags and len(and_tags.intersection(tags)) != len(and_tags):
+            continue
+        if or_tags and not or_tags.intersection(tags):
+            continue
+        selection.append(dissector)
+    return selection
+
+
+def _match_slug(candidate, slugs):
+    for slug in slugs:
+        if fnmatchcase(candidate, slug):
+            return True
+    return False
+
+
+def _select_slug(values: list[str], dissectors: DissectorList):
+    slugs = []
+    not_slugs = []
+    for val in values:
+        if val.startswith('-'):
+            not_slugs.append(val[1:])
+        else:
+            slugs.append(val)
+    selection = []
+    for dissector in dissectors:
+        if not_slugs and _match_slug(dissector.slug, not_slugs):
+            continue
+        if slugs and not _match_slug(dissector.slug, slugs):
+            continue
+        selection.append(dissector)
+    return selection
+
+
+_SELECT_STRATEGY = {
+    'tags': _select_tags,
+    'slug': _select_slug,
+}
+
+
+def _select(filter_val: str, dissectors: DissectorList) -> DissectorList:
+    attr, values = filter_val.strip().split(':', 1)
+    values = values.split(',')
+    return _SELECT_STRATEGY[attr](values, dissectors)
 
 
 def _selection_routine(
@@ -246,14 +292,10 @@ def _dissect_cmd(args):
     parallel_surgeons = max(1, args.parallel_surgeons)
     parallel_dissectors = max(1, args.parallel_dissectors)
     if args.filter:
-        try:
-            dissectors = _select(args.filter, dissectors)
-        except KeyError:
-            _LOGGER.error(
-                "invalid filter attribute, available attributes are %s",
-                list(_GETATTR_STRATEGY.keys()),
-            )
-            return
+        dissectors = _select(args.filter, dissectors)
+    if not dissectors:
+        _LOGGER.warning("dissector selection is empty!")
+        return
     args.output_directory.mkdir(parents=True, exist_ok=True)
     dissector_ctx = DissectorContext(
         target=args.target,
