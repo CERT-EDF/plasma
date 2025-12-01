@@ -20,9 +20,9 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "yarl~=1.9",
-    "rich~=14.1",
-    "magika~=0.5",
+    "yarl~=1.22",
+    "rich~=14.2",
+    "magika~=1.0",
     "python-magic~=0.4",
 ]
 

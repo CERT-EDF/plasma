@@ -20,7 +20,7 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "edf-plasma-dissectors~=1.0",
+    "edf-plasma-dissectors~=2.0",
 ]
 
 
