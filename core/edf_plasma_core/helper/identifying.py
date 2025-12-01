@@ -5,7 +5,6 @@ from pathlib import Path
 
 from magic import from_buffer, from_file
 from magika import Magika
-from magika.types import MagikaResult
 
 
 @dataclass
@@ -36,8 +35,8 @@ def identify_bytes(
         magic_mime=from_buffer(data, mime=True),
         magic_info=from_buffer(data, mime=False),
         magika_mime=magika_result.output.mime_type,
-        magika_info=magika_result.output.magic,
-        magika_label=magika_result.output.ct_label,
+        magika_info=magika_result.output.description,
+        magika_label=str(magika_result.output.label),
     )
 
 
@@ -46,11 +45,11 @@ def identify_filepath(
 ) -> IdentificationResult:
     """Identify content type/format from filepath"""
     magika = magika or instanciate_magika()
-    magika_result: MagikaResult = magika.identify_path(filepath)
+    magika_result = magika.identify_path(filepath)
     return IdentificationResult(
         magic_mime=from_file(filepath, mime=True),
         magic_info=from_file(filepath, mime=False),
         magika_mime=magika_result.output.mime_type,
-        magika_info=magika_result.output.magic,
-        magika_label=magika_result.output.ct_label,
+        magika_info=magika_result.output.description,
+        magika_label=str(magika_result.output.label),
     )
