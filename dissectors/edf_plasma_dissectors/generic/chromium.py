@@ -64,7 +64,7 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
 
 DISSECTOR = Dissector(
     slug='generic_chromium_history',
-    tags={Tag.GENERIC, Tag.WINDOWS, Tag.LINUX},
+    tags={Tag.GENERIC, Tag.WINDOWS, Tag.LINUX, Tag.DARWIN},
     columns=[
         Column('hist_action', DataType.STR),
         Column('hist_time', DataType.STR),

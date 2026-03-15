@@ -1,3 +1,3 @@
 """Generic dissectors"""
 
-from . import artifact_info, chromium, firefox, ssh_pub_key
+from . import artifact_info, chromium, firefox, history, ssh_pub_key

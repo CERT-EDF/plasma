@@ -1,4 +1,4 @@
-"""Linux history Dissector"""
+"""History Dissector"""
 
 from pathlib import Path
 
@@ -28,10 +28,10 @@ def _parse_default(line: str, _state: dict) -> Record:
     }
 
 
-def _parse_zsh(line: str, _state: dict) -> Record:
+def _parse_zsh(line: str, state: dict) -> Record:
     match = _ZSH_TS_PATTERN.fullmatch(line)
     if not match:
-        return None
+        return _parse_default(line, state)
     hist_time = int(match.group('timestamp')) * 1_000_000
     return {
         'hist_time': to_iso_fmt(from_unix_timestamp(hist_time)),
@@ -59,11 +59,9 @@ _PARSER_STRATEGY = {
 
 def _select_impl(directory: Path) -> PathIterator:
     patterns = (
-        'root/.*_history',
-        'home/*/.*_history',
+        '.*_history',
         # velociraptor collected files have an url-encoded dot
-        'root/%2E*_history',
-        'home/*/%2E*_history',
+        '%2E*_history',
     )
     for pattern in patterns:
         yield from select(directory, pattern)
@@ -81,8 +79,8 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
 
 
 DISSECTOR = Dissector(
-    slug='linux_history',
-    tags={Tag.LINUX},
+    slug='generic_history',
+    tags={Tag.GENERIC, Tag.LINUX, Tag.DARWIN},
     columns=[
         Column('hist_time', DataType.STR),
         Column('hist_command', DataType.STR),
