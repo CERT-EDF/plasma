@@ -9,6 +9,7 @@ from operator import itemgetter
 REF_OLE = datetime(1899, 12, 30, tzinfo=timezone.utc)
 REF_UNIX = datetime(1970, 1, 1, tzinfo=timezone.utc)
 REF_WIN32 = datetime(1601, 1, 1, tzinfo=timezone.utc)
+REF_DARWIN = datetime(2001, 1, 1, tzinfo=timezone.utc)
 
 
 class MACB(Flag):
@@ -61,6 +62,11 @@ def from_unix_timestamp(microseconds: int) -> datetime:
 def from_win32_timestamp(microseconds: int) -> datetime:
     """WIN32 microseconds timestamp as datetime"""
     return REF_WIN32 + timedelta(microseconds=microseconds)
+
+
+def from_darwin_timestamp(microseconds: int) -> datetime:
+    """Darwin microseconds timestamp as datetime"""
+    return REF_DARWIN + timedelta(microseconds=microseconds)
 
 
 def _macb_string(macb: MACB):

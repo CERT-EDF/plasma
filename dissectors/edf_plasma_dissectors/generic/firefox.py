@@ -15,7 +15,7 @@ from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-from .helper import SQLiteDatabase, check_file_signature
+from ..helper.sqlite import SQLiteDatabase, check_sqlite_signature
 
 _LOGGER = get_logger('dissectors.generic.chromium')
 _FIREFOX_VISIT_SQL_STMT = '''
@@ -53,7 +53,7 @@ def _parse_firefox_db(sql_db):
 def _select_impl(directory: Path) -> PathIterator:
     pattern = ci_glob_pattern('places.sqlite')
     for filepath in select(directory, pattern):
-        if not check_file_signature(filepath):
+        if not check_sqlite_signature(filepath):
             _LOGGER.warning("signature check failed for: %s", filepath)
             continue
         yield filepath
