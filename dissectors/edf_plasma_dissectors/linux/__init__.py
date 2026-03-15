@@ -10,7 +10,6 @@ from . import (
     fslist,
     fstab,
     group,
-    history,
     hosts,
     journal,
     logrotate,

@@ -42,7 +42,7 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
 
 DISSECTOR = Dissector(
     slug='generic_ssh_pub_key',
-    tags={Tag.GENERIC, Tag.WINDOWS, Tag.LINUX},
+    tags={Tag.GENERIC, Tag.WINDOWS, Tag.LINUX, Tag.DARWIN},
     columns=[
         Column('ssh_pub_key_encryption', DataType.STR),
         Column('ssh_pub_key_data', DataType.STR),
