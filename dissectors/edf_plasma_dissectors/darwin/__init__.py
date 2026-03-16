@@ -2,5 +2,6 @@
 
 from . import (
     safari,
+    launch,
     version,
 )
