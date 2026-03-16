@@ -1,4 +1,4 @@
-"""Linux hosts Dissector"""
+"""Generic hosts Dissector"""
 
 from pathlib import Path
 
@@ -37,8 +37,8 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
 
 
 DISSECTOR = Dissector(
-    slug='linux_hosts',
-    tags={Tag.LINUX},
+    slug='generic_hosts',
+    tags={Tag.GENERIC, Tag.LINUX, Tag.WINDOWS, Tag.DARWIN},
     columns=[
         Column('host_addr', DataType.STR),
         Column('host_name', DataType.STR),

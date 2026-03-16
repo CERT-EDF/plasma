@@ -14,7 +14,6 @@ from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 from .helper import load_plist
 
-
 _GLOB_PATTERN = 'SystemVersion.plist'
 
 
@@ -35,7 +34,7 @@ DISSECTOR = Dissector(
         Column('field', DataType.STR),
         Column('value', DataType.STR),
     ],
-    description="Darwin system version",
+    description="System version information",
     select_impl=_select_impl,
     dissect_impl=_dissect_impl,
 )

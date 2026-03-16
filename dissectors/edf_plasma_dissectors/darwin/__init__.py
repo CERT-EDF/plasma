@@ -1,7 +1,8 @@
 """Darwin-related dissectors"""
 
 from . import (
-    safari,
+    install_history,
     launch,
+    safari,
     version,
 )
