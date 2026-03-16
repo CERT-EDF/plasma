@@ -1,5 +1,6 @@
 """Darwin Launch Configuration Dissector"""
 
+from json import dumps
 from pathlib import Path
 
 from edf_plasma_core.concept import Tag
@@ -14,8 +15,7 @@ from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 from .helper import load_plist
 
-
-_GLOB_PATTERN =  'Library/Launch*/*.plist'
+_GLOB_PATTERN = 'Library/Launch*/*.plist'
 
 
 def _select_impl(directory: Path) -> PathIterator:
@@ -45,7 +45,7 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     yield {
         'category': ctx.filepath.parent.name,
         'label': label,
-        'argv': argv,
+        'argv': dumps(argv),
     }
 
 
@@ -57,7 +57,7 @@ DISSECTOR = Dissector(
         Column('label', DataType.STR),
         Column('argv', DataType.STR),
     ],
-    description="Darwin launch agents and daemons",
+    description="Launch agents and daemons label and argument vectors",
     select_impl=_select_impl,
     dissect_impl=_dissect_impl,
 )

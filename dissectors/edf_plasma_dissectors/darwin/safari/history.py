@@ -9,15 +9,18 @@ from edf_plasma_core.dissector import (
     Dissector,
     register_dissector,
 )
-from edf_plasma_core.helper.datetime import from_darwin_timestamp, to_iso_fmt
+from edf_plasma_core.helper.datetime import (
+    from_darwin_timestamp,
+    to_iso_fmt,
+    with_utc,
+)
 from edf_plasma_core.helper.logging import get_logger
 from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-from ..helper import load_plist
 from ...helper.sqlite import SQLiteDatabase, check_sqlite_signature
-
+from ..helper import load_plist
 
 _LOGGER = get_logger('dissectors.darwin.safari.history')
 _GLOB_PATTERNS = ['Downloads.plist', 'History.db']
@@ -26,6 +29,7 @@ SELECT v.visit_time,i.url
 FROM history_visits AS v
 LEFT JOIN history_items AS i ON v.history_item = i.id
 '''
+
 
 def _select_impl(directory: Path) -> PathIterator:
     for pattern in _GLOB_PATTERNS:
@@ -44,7 +48,9 @@ def _dissect_history(ctx: DissectionContext) -> RecordIterator:
             darwin_ts = row[0] * 1_000_000
             yield {
                 'hist_action': 'visit',
-                'hist_time': to_iso_fmt(from_darwin_timestamp(darwin_ts)),
+                'hist_time': to_iso_fmt(
+                    with_utc(from_darwin_timestamp(darwin_ts))
+                ),
                 'hist_url': row[1],
                 'hist_content': '',
             }
@@ -84,9 +90,8 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
     yield from dissect_impl(ctx)
 
 
-
 DISSECTOR = Dissector(
-    slug='darwin_safari_downloads',
+    slug='darwin_safari_history',
     tags={Tag.DARWIN},
     columns=[
         Column('hist_action', DataType.STR),
@@ -94,7 +99,7 @@ DISSECTOR = Dissector(
         Column('hist_url', DataType.STR),
         Column('hist_content', DataType.STR),
     ],
-    description="Darwin Safari downloads",
+    description="Safari visit and download history",
     select_impl=_select_impl,
     dissect_impl=_dissect_impl,
 )
