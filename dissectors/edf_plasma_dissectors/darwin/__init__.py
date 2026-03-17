@@ -1,11 +1,12 @@
 """Darwin-related dissectors"""
 
 from . import (
+    fslist,
     install_history,
     install_log,
     launch,
-    system_log,
     safari,
+    system_log,
     users,
     version,
 )

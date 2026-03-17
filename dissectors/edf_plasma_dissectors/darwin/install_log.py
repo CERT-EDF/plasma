@@ -14,7 +14,6 @@ from edf_plasma_core.helper.streaming import lines_from_filepath
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-
 _GLOB_PATTERN = 'var/log/install.log'
 _RECORD_PATTERN = regexp(
     r'(?P<date>(\d{4}(-\d\d){2}|[A-Z][a-z]+\s+\d{1,2})) (?P<time>[^+\-]+)(?P<offset>[^ ]+) (?P<host>[^ ]+) (?P<process>[^\[]+)\[(?P<pid>\d+)\]: (?P<message>.*)'
@@ -51,7 +50,6 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
         prev_message = match.group('message')
     if prev_match:
         yield _build_record(prev_match, prev_message)
-
 
 
 DISSECTOR = Dissector(
