@@ -16,11 +16,10 @@ from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 from .helper import load_plist
 
-_GLOB_PATTERN = 'Receipts/InstallHistory.plist'
-
 
 def _select_impl(directory: Path) -> PathIterator:
-    yield from select(directory, _GLOB_PATTERN)
+    pattern = 'Receipts/InstallHistory.plist'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

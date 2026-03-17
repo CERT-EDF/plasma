@@ -152,6 +152,7 @@ def _selection_routine(
             hostname=dissector_ctx.hostname,
             source=str(target),
             filepath=target,
+            state=dissector.state,
         )
         processing_queue.put(ctx)
         perfmeter.tick()
@@ -278,6 +279,7 @@ def _dissector_routine(
             break
         perfmeter = PerformanceMeter()
         with perfmeter:
+            dissector.set_state(dissector_ctx.target)
             _run_dissector(dissector, dissector_ctx, perfmeter)
         _LOGGER.info(
             "dissector=%s, files=%s, elapsed=%s",
