@@ -42,6 +42,7 @@ class DissectionContext:
     source: str
     filepath: Path
     errors: list[DissectionError] = field(default_factory=list)
+    state: dict
 
     def register_error(self, reason: str):
         """Register and log an error"""
@@ -69,10 +70,12 @@ class Dissector:
 
     slug: str
     tags: set[Tag]
+    state: dict = field(default_factory=dict)
     columns: ColumnList
     description: str
     select_impl: Callable[[Path], PathIterator]
     dissect_impl: Callable[[DissectionContext], RecordIterator]
+    set_state_impl: Callable[[Path], dict] | None = None
 
     @property
     def table_schema(self) -> Table:
@@ -129,6 +132,11 @@ class Dissector:
         except:
             _LOGGER.exception("dissector exception: %s", self.slug)
             ctx.register_error("unhandled exception, please create an issue!")
+
+    def set_state(self, directory: Path):
+        """Initialize dissector state"""
+        if self.set_state_impl:
+            self.state = self.set_state_impl(directory)
 
 
 DissectorList = list[Dissector]

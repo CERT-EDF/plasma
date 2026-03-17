@@ -1,4 +1,4 @@
-"""Darwin Version Dissector"""
+"""Client info dissector"""
 
 from pathlib import Path
 
@@ -8,32 +8,38 @@ from edf_plasma_core.dissector import (
     Dissector,
     register_dissector,
 )
+from edf_plasma_core.helper.json import read_json
 from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-from .helper import load_plist
-
 
 def _select_impl(directory: Path) -> PathIterator:
-    pattern = 'SystemVersion.plist'
-    yield from select(directory, _GLOB_PATTERN)
+    pattern = 'client_info.json'
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
-    data = load_plist(ctx.filepath)
+    data = read_json(ctx.filepath)
     for field, value in data.items():
         yield {'field': field, 'value': value}
 
 
 DISSECTOR = Dissector(
-    slug='darwin_version',
-    tags={Tag.DARWIN},
+    slug='generic_client_info',
+    tags={
+        Tag.GENERIC,
+        Tag.WINDOWS,
+        Tag.LINUX,
+        Tag.ANDROID,
+        Tag.DARWIN,
+        Tag.IOS,
+    },
     columns=[
         Column('field', DataType.STR),
         Column('value', DataType.STR),
     ],
-    description="System version information",
+    description="Generic client information",
     select_impl=_select_impl,
     dissect_impl=_dissect_impl,
 )

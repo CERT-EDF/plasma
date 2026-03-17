@@ -23,7 +23,6 @@ from ...helper.sqlite import SQLiteDatabase, check_sqlite_signature
 from ..helper import load_plist
 
 _LOGGER = get_logger('dissectors.darwin.safari.history')
-_GLOB_PATTERNS = ['Downloads.plist', 'History.db']
 _SAFARI_VISIT_SQL_STMT = '''
 SELECT v.visit_time,i.url
 FROM history_visits AS v
@@ -32,7 +31,8 @@ LEFT JOIN history_items AS i ON v.history_item = i.id
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    for pattern in _GLOB_PATTERNS:
+    patterns = ['Downloads.plist', 'History.db']
+    for pattern in patterns:
         for filepath in select(directory, pattern):
             if pattern != 'History.db':
                 yield filepath

@@ -14,11 +14,10 @@ from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 from .helper import load_plist
 
-_GLOB_PATTERN = 'var/db/dslocal/nodes/Default/users/*.plist'
-
 
 def _select_impl(directory: Path) -> PathIterator:
-    yield from select(directory, _GLOB_PATTERN)
+    pattern = 'var/db/dslocal/nodes/Default/users/*.plist'
+    yield from select(directory, pattern)
 
 
 def _get_value(data: dict, field: str) -> str:

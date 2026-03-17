@@ -14,14 +14,14 @@ from edf_plasma_core.helper.streaming import lines_from_filepath
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-_GLOB_PATTERN = 'var/log/system.log'
 _RECORD_PATTERN = regexp(
     r'(?P<date>(\d{4}(-\d\d){2}|[A-Z][a-z]+\s+\d{1,2})) (?P<time>[^+\-]+)(?P<offset>[^ ]+) (?P<host>[^ ]+) (?P<process>[^\[]+)\[(?P<pid>\d+)\]: (?P<message>.*)'
 )
 
 
 def _select_impl(directory: Path) -> PathIterator:
-    yield from select(directory, _GLOB_PATTERN)
+    pattern = 'var/log/system.log'
+    yield from select(directory, pattern)
 
 
 def _build_record(match, message: str) -> dict:

@@ -15,11 +15,10 @@ from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 from .helper import load_plist
 
-_GLOB_PATTERN = 'Library/Launch*/*.plist'
-
 
 def _select_impl(directory: Path) -> PathIterator:
-    yield from select(directory, _GLOB_PATTERN)
+    pattern = 'Library/Launch*/*.plist'
+    yield from select(directory, pattern)
 
 
 def _extract_argv(data: dict) -> list[str] | None:
