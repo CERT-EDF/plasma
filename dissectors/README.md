@@ -63,7 +63,6 @@ from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 # initialize private globals (logger and constant values)
 # ------------------------------------------------------------------------------
 _LOGGER = get_logger('dissectors.linux.auditd')
-_GLOB_PATTERN = 'audit.log*'
 _PATTERN = regexp(
     r'type=(?P<type>[^\s]+) [^\(]+\((?P<date>[^\:]+):(?P<id>[^\)]+)\): (?P<data>.+)'
 )
@@ -74,7 +73,8 @@ _PATTERN = regexp(
 # usually walks through it recursively yielding path for files it can dissect.
 # ------------------------------------------------------------------------------
 def _select_impl(directory: Path) -> PathIterator:
-    yield from select(directory, _GLOB_PATTERN)
+    pattern = 'audit.log*'
+    yield from select(directory, pattern)
 # ------------------------------------------------------------------------------
 # implement the dissector dissection routine
 #

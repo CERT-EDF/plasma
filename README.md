@@ -42,8 +42,14 @@ plasma -h
 plasma dissect -h
 # List available plasma dissectors
 plasma list
-# Dissect artifacts in source/ with plasma filtering dissectors by tags
+# Dissect artifacts w/ dissectors tagged linux OR pcap
 plasma dissect --filter 'tags:linux,pcap' source/ output/
+# Dissect artifacts w/ dissectors tagged windows AND memdump
+plasma dissect --filter 'tags:+windows,+memdump' source/ output/
+# Dissect artifacts w/ dissectors tagged windows EXCEPT pe
+plasma dissect --filter 'tags:+windows,-pe' source/ output/
+# Dissect artifacts w/ dissectors whose slug matches elf_* EXCEPT elf_info
+plasma dissect --filter 'slug:elf_*,-elf_info' source/ output/
 ```
 
 <br>
