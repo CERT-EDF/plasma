@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from sqlite3 import DatabaseError, connect
+from sqlite3 import DatabaseError, Row, connect
 from typing import Any
 
 from edf_plasma_core.dissector import DissectionContext
@@ -25,6 +25,7 @@ class SQLiteDatabase:
 
     def __enter__(self):
         self.connection = connect(self.ctx.filepath)
+        self.connection.row_factory = Row
         return self
 
     def __exit__(self, exc_typ, exc_val, exc_trb):

@@ -253,6 +253,11 @@ def _run_dissector(
             perfmeter,
         ),
     )
+    _LOGGER.info(
+        "dissector=%s, state=starting, surgeons=%d",
+        dissector.slug,
+        len(surgeon_threads),
+    )
     error_writer_thread.start()
     record_writer_thread.start()
     for surgeon_thread in surgeon_threads:
@@ -279,10 +284,11 @@ def _dissector_routine(
             break
         perfmeter = PerformanceMeter()
         with perfmeter:
+            _LOGGER.info("dissector=%s, state=init", dissector.slug)
             dissector.set_state(dissector_ctx.target)
             _run_dissector(dissector, dissector_ctx, perfmeter)
         _LOGGER.info(
-            "dissector=%s, files=%s, elapsed=%s",
+            "dissector=%s, state=stopping, files=%s, elapsed=%s",
             dissector.slug,
             perfmeter.count,
             perfmeter.elapsed,
@@ -298,6 +304,7 @@ def _dissect_cmd(args):
     if not dissectors:
         _LOGGER.warning("dissector selection is empty!")
         return
+    _LOGGER.info("selected %d dissectors.", len(dissectors))
     args.output_directory.mkdir(parents=True, exist_ok=True)
     dissector_ctx = DissectorContext(
         target=args.target,
