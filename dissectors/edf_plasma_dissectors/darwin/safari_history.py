@@ -19,10 +19,10 @@ from edf_plasma_core.helper.selecting import select
 from edf_plasma_core.helper.table import Column, DataType
 from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
-from ...helper.sqlite import SQLiteDatabase, check_sqlite_signature
-from ..helper import load_plist
+from ..helper.sqlite import SQLiteDatabase, check_sqlite_signature
+from .helper import load_plist
 
-_LOGGER = get_logger('dissectors.darwin.safari.history')
+_LOGGER = get_logger('dissectors.darwin.safari_history')
 _SAFARI_VISIT_SQL_STMT = '''
 SELECT v.visit_time,i.url
 FROM history_visits AS v

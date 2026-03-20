@@ -17,7 +17,7 @@ from .helper import load_plist
 
 def _select_impl(directory: Path) -> PathIterator:
     pattern = 'SystemVersion.plist'
-    yield from select(directory, _GLOB_PATTERN)
+    yield from select(directory, pattern)
 
 
 def _dissect_impl(ctx: DissectionContext) -> RecordIterator:

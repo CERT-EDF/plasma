@@ -49,7 +49,7 @@ def _dissect_impl(ctx: DissectionContext) -> RecordIterator:
 
 
 DISSECTOR = Dissector(
-    slug='darwin_launch',
+    slug='darwin_startup',
     tags={Tag.DARWIN},
     columns=[
         Column('category', DataType.STR),
