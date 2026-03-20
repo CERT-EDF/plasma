@@ -17,7 +17,7 @@ from edf_plasma_core.helper.typing import PathIterator, RecordIterator
 
 from ..helper.sqlite import SQLiteDatabase, check_sqlite_signature
 
-_LOGGER = get_logger('dissectors.generic.chromium')
+_LOGGER = get_logger('dissectors.generic.firefox')
 _FIREFOX_VISIT_SQL_STMT = '''
 SELECT visit_date,url
 FROM moz_places
