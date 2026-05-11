@@ -21,7 +21,7 @@ classifiers = [
 ]
 dependencies = [
     "yarl~=1.22",
-    "rich~=14.2",
+    "rich~=15.0",
     "magika~=1.0",
     "python-magic~=0.4",
 ]
