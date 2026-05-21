@@ -27,12 +27,12 @@ dependencies = [
 
 [project.optional-dependencies]
 pcap = [
-    "scapy~=2.6",
-    "cryptography~=46.0",
+    "scapy~=2.7",
+    "cryptography~=48.0",
 ]
 linux = ["systemd-python"]
 binary = ["lief~=0.17"]
-memdump = ["volatility3~=2.26"]
+memdump = ["volatility3~=2.28"]
 windows = [
     "liblnk-python",
     "libevtx-python",
@@ -51,7 +51,7 @@ windows = [
 
 
 [build-system]
-requires = ["setuptools>=78", "setuptools_scm>=8.2", "wheel"]
+requires = ["setuptools>=82", "setuptools_scm>=10", "wheel"]
 build-backend = "setuptools.build_meta"
 
 

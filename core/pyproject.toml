@@ -20,7 +20,7 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "yarl~=1.22",
+    "yarl~=1.24",
     "rich~=15.0",
     "magika~=1.0",
     "python-magic~=0.4",
@@ -34,7 +34,7 @@ dependencies = [
 
 
 [build-system]
-requires = ["setuptools>=78", "setuptools_scm>=8.2", "wheel"]
+requires = ["setuptools>=82", "setuptools_scm>=10", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
