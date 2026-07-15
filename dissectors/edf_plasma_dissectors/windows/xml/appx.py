@@ -24,7 +24,6 @@ class AppXManifestIdentity(XMLSerializableAPI):
 
 @dataclass
 class AppXManifest(XMLSerializableAPI):
-
     identity: AppXManifestIdentity
 
     @classmethod
