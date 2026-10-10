@@ -51,21 +51,17 @@ class EventDataType(Enum):
 
 
 def _parse_data(element):
-    data = get_child(element, 'EventData')
-    if data is not None:
-        return EventDataType.EVENT_DATA, data
-    data = get_child(element, 'UserData')
-    if data is not None:
-        return EventDataType.USER_DATA, data
-    data = get_child(element, 'DebugData')
-    if data is not None:
-        return EventDataType.DEBUG_DATA, data
-    data = get_child(element, 'BinaryEventData')
-    if data is not None:
-        return EventDataType.BINARY_DATA, data
-    data = get_child(element, 'DissectionErrorData')
-    if data is not None:
-        return EventDataType.ERROR_DATA, data
+    for tag, datatype in (
+        ('EventData', EventDataType.EVENT_DATA),
+        ('UserData', EventDataType.USER_DATA),
+        ('DebugData', EventDataType.DEBUG_DATA),
+        ('BinaryEventData', EventDataType.BINARY_DATA),
+        ('DissectionErrorData', EventDataType.ERROR_DATA),
+        ('ProcessingErrorData', EventDataType.ERROR_DATA),
+    ):
+        data = get_child(element, tag)
+        if data is not None:
+            return datatype, data
     _LOGGER.warning(
         "cannot find event data in %s",
         [item.tag for item in get_children(element)],
@@ -85,5 +81,7 @@ class Event(XMLSerializableAPI):
     def from_element(cls, element):
         system = System.from_element(get_child(element, 'System'))
         datatype, data = _parse_data(element)
+        if datatype is None:
+            return None
         data = element_to_string(data)
         return cls(system=system, datatype=datatype, data=data)
